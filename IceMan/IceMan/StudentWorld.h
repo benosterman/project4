@@ -3,7 +3,10 @@
 
 #include "GameWorld.h"
 #include "GameConstants.h"
+#include <vector>
 #include <string>
+using namespace std;
+
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
@@ -17,6 +20,11 @@ public:
 
 	virtual int init()
 	{
+		int initialX = 30;
+        int initialY = 60;
+        
+        myIceman = new Iceman(this, initialX, initialY);
+		
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -24,8 +32,7 @@ public:
 	{
 		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
 		// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-		decLives();
-		return GWSTATUS_PLAYER_DIED;
+		return GWSTATUS_CONTINUE_GAME;
 	}
 
 	virtual void cleanUp()
@@ -33,6 +40,8 @@ public:
 	}
 
 private:
+std::vector<std::unique_ptr<Actor>> actors;
+Iceman* myIceman;
 };
 
 #endif // STUDENTWORLD_H_
