@@ -12,6 +12,11 @@ using namespace std;
 
 class StudentWorld : public GameWorld
 {
+	private:
+std::vector<std::unique_ptr<Actor>> actors;
+Iceman* myIceman;
+int maxWidth = 63;
+int maxHeight = 59;
 public:
 	StudentWorld(std::string assetDir)
 		: GameWorld(assetDir)
@@ -24,24 +29,46 @@ public:
         int initialY = 60;
         
         myIceman = new Iceman(this, initialX, initialY);
-		
+		for (int x = 0; x < maxWidth; ++x) {
+                for (int y = 0; y < maxHeight; ++y) {
+                    std::unique_ptr<Ice> ice = std::make_unique<Ice>(this,x,y);
+                    
+                    
+                    actors.push_back(std::move(ice));
+                }
+            }
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
-	virtual int move()
-	{
-		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-		// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-		return GWSTATUS_CONTINUE_GAME;
-	}
+	virtual int move() override
+    {
+        for (auto& actor : actors) {
+            if (actor->Alive()) {
+                myIceman->doSomething();
+                
+                if (!myIceman->Alive()) {
+                    
+                    decLives();
+                    return GWSTATUS_PLAYER_DIED;
+                }
+            }
+        }
+        myIceman->doSomething();
+        if (!myIceman->Alive()) {
+            
+            decLives();
+            return GWSTATUS_PLAYER_DIED;
+        }
+        
+        
+        return GWSTATUS_CONTINUE_GAME;
+    }
 
 	virtual void cleanUp()
 	{
 	}
 
-private:
-std::vector<std::unique_ptr<Actor>> actors;
-Iceman* myIceman;
+
 };
 
 #endif // STUDENTWORLD_H_
