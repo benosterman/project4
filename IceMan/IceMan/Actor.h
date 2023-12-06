@@ -9,48 +9,50 @@ class Actor : public GraphObject
 
 {
 private:
-StudentWorld* myWorld;
-bool isAlive;
+    StudentWorld* myWorld;
+    bool isAlive;
 public:
-    
-    Actor(StudentWorld* world, int imageID, double startX, double startY, Direction dir = right, int depth = 0) : GraphObject(imageID, startX, startY), myWorld(world), isAlive(true) {}
-    
-    virtual ~Actor() {}
-    bool Alive() const
-    {
-        return isAlive;
-    }
-    
-    StudentWorld* getWorld() const
-    {
-        return myWorld;
-    }
+    //constructor
+    //Actor(StudentWorld* world, int startX, int startY, Direction startDir,bool visible, int imageID, double size, int depth);
+    Actor(StudentWorld* world, int startX, int startY, Direction dir, bool visible, int imageID, double size, int depth);
+
+    //virtual destructor
+    virtual ~Actor();
+
+    //returns the value of isAlive
+    bool Alive() const;
+
+    //returns a pointer to myWorld
+    StudentWorld* getWorld() const;
+
 };
 
 
-class Iceman : public Actor
+class Agent : public Actor
+{
+private:
+    unsigned int health;
+public:
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir, int imageID, unsigned int hitPoints);
+};
+
+
+class Iceman : public Agent
 {
 private:
 
-public: 
-    Iceman(StudentWorld* world, int startX, int startY) : Actor(world, IID_PLAYER, startX, startY, right, 1)
-    {
-        setVisible(true);
-        
-    }
+public:
+    Iceman(StudentWorld* world, int startX, int startY);
     void doSomething();
-    
+
 };
+
 
 class Ice : public Actor
 {
 private:
 public:
-    Ice(StudentWorld* world, int startX, int startY) : Actor(world, IID_ICE, startX, startY, right, 0)
-    {
-        setVisible(true);
-        
-    }
-    
+    Ice(StudentWorld* world, int startX, int startY);
+
 };
 #endif // ACTOR_H_
