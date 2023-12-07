@@ -3,33 +3,34 @@
 
 #include "GameWorld.h"
 #include "GameConstants.h"
-#include <vector>
+#include "Actor.h"
 #include <string>
+#include <vector>
+#include <memory>
 using namespace std;
 
 
-// Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
-
 class StudentWorld : public GameWorld
 {
-	private:
-std::vector<std::unique_ptr<Actor>> actors;
-Iceman* myIceman;
-int maxWidth = 63;
-int maxHeight = 59;
+private:
+    
+    std::vector<std::unique_ptr<Actor>> actors;
+    Iceman* myIceman;
+    int maxWidth = 63;
+    int maxHeight = 60;
 public:
-	StudentWorld(std::string assetDir)
-		: GameWorld(assetDir)
-	{
-	}
+    StudentWorld(std::string assetDir)
+        : GameWorld(assetDir)
+    {
+    }
 
-	virtual int init()
-	{
-		int initialX = 30;
+    virtual int init() override
+    {
+        int initialX = 30;
         int initialY = 60;
         
         myIceman = new Iceman(this, initialX, initialY);
-		for (int x = 0; x < maxWidth; ++x) {
+        for (int x = 0; x < maxWidth; ++x) {
                 for (int y = 0; y < maxHeight; ++y) {
                     std::unique_ptr<Ice> ice = std::make_unique<Ice>(this,x,y);
                     
@@ -37,10 +38,10 @@ public:
                     actors.push_back(std::move(ice));
                 }
             }
-		return GWSTATUS_CONTINUE_GAME;
-	}
+        return GWSTATUS_CONTINUE_GAME;
+    }
 
-	virtual int move() override
+    virtual int move() override
     {
         for (auto& actor : actors) {
             if (actor->Alive()) {
@@ -53,7 +54,11 @@ public:
                 }
             }
         }
+        
         myIceman->doSomething();
+        removeIce(myIceman->getX(), myIceman->getY());
+        
+        
         if (!myIceman->Alive()) {
             
             decLives();
@@ -63,12 +68,17 @@ public:
         
         return GWSTATUS_CONTINUE_GAME;
     }
-
-	virtual void cleanUp()
-	{
-	}
-
-
+    
+    void cleanUp()
+    {
+    }
+    
+    void removeIce(int x, int y);
+    
+        
 };
+
+    
+
 
 #endif // STUDENTWORLD_H_
