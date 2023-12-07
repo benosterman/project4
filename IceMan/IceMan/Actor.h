@@ -33,7 +33,20 @@ class Agent : public Actor
 private:
     unsigned int health;
 public:
-    Agent(StudentWorld* world, int startX, int startY, Direction startDir, int imageID, unsigned int hitPoints);
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
+        int imageID, unsigned int hitPoints);
+    
+    virtual void move();
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold();
+    virtual bool huntsIceMan() const;
+    unsigned int getHealth() const;
+
+    // Set state to having gien up protest
+    void setMustLeaveOilField();
+
+    // Set number of ticks until next move
+    void setTicksToNextMove();
 };
 
 
@@ -48,11 +61,109 @@ public:
 };
 
 
+//protestor parent class
+class Protester : public Agent
+{
+public:
+    Protester(StudentWorld* world, int startX, int startY, int imageID,
+        unsigned int hitPoints, unsigned int score);
+    /*
+    virtual void move();
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold();
+    virtual bool huntsIceMan() const;
+
+    // Set state to having gien up protest
+    void setMustLeaveOilField();
+
+    // Set number of ticks until next move
+    void setTicksToNextMove(); */
+};
+
+
+//Regular protestor class
+class RegularProtester : public Protester
+{
+public:
+    RegularProtester(StudentWorld* world, int startX, int startY, int imageID);
+    virtual void move();
+    virtual void addGold();
+};
+
+
+//Hardcore protestor class
+class HardcoreProtester : public Protester
+{
+public:
+    HardcoreProtester(StudentWorld* world, int startX, int startY, int imageID);
+    virtual void move();
+    virtual void addGold();
+};
+
+
+//Iceblock class
 class Ice : public Actor
 {
 private:
 public:
     Ice(StudentWorld* world, int startX, int startY);
-
+    virtual void move();
 };
+
+class Boulder : public Actor
+{
+public:
+    Boulder(StudentWorld* world, int startX, int startY);
+    virtual void move();
+    virtual bool canActorsPassThroughMe() const;
+};
+
+class Squirt : public Actor
+{
+public:
+    Squirt(StudentWorld* world, int startX, int startY, Direction startDir);
+    virtual void move();
+};
+
+class ActivatingObject : public Actor
+{
+public:
+    ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
+        int soundToPlay, bool activateOnPlayer,
+        bool activateOnProtester, bool initallyActive);
+    virtual void move();
+
+    // Set number of ticks until this object dies
+    void setTicksToLive();
+};
+
+class OilBarrel : public ActivatingObject
+{
+public:
+    OilBarrel(StudentWorld* world, int startX, int startY);
+    virtual void move();
+    virtual bool needsToBePickedUpToFinishLevel() const;
+};
+
+class GoldNugget : public ActivatingObject
+{
+public:
+    GoldNugget(StudentWorld* world, int startX, int startY, bool temporary);
+    virtual void move();
+};
+
+class SonarKit : public ActivatingObject
+{
+public:
+    SonarKit(StudentWorld* world, int startX, int startY);
+    virtual void move();
+};
+
+class WaterPool : public ActivatingObject
+{
+public:
+    WaterPool(StudentWorld* world, int startX, int startY);
+    virtual void move();
+};
+
 #endif // ACTOR_H_

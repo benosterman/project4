@@ -21,18 +21,61 @@ StudentWorld* Actor::getWorld() const {
     return myWorld;
 }
 
-//Ice Class
-Ice::Ice(StudentWorld* world, int startX, int startY) : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) {
-    
+
+
+//Ice Class start
+Ice::Ice(StudentWorld* world, int startX, int startY) 
+    : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
+
+void Ice::move() {
+
 }
+//Ice Class end
+
+
 
 //Agent Class
-Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir, int imageID, unsigned int hitPoints) : Actor(world, startX, startY, startDir, true, imageID, 1.0, 0) {
+Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
+    int imageID, unsigned int hitPoints) : Actor(world, startX, startY, 
+        startDir, true, imageID, 1.0, 0) 
+{
     health = hitPoints;
 }
+void Agent::move() {
+
+}
+
+bool Agent::annoy(unsigned int amount) {
+    return false;
+}
+
+void Agent::addGold() {
+
+}
+
+bool Agent::huntsIceMan() const {
+    return false;
+}
+
+unsigned int Agent::getHealth() const {
+    return health;
+}
+
+// Set state to having gien up protest
+void Agent::setMustLeaveOilField() {
+
+}
+
+// Set number of ticks until next move
+void Agent::setTicksToNextMove() {
+
+}
+//Agent Class end
 
 //Iceman Class
-Iceman::Iceman(StudentWorld* world, int startX, int startY) : Agent(world, startX, startY, right, IID_PLAYER, 10) {
+Iceman::Iceman(StudentWorld* world, int startX, int startY) 
+    : Agent(world, startX, startY, right, IID_PLAYER, 10) 
+{
 
 }
 
@@ -43,7 +86,6 @@ void Iceman::doSomething()
     {
         return;
     }
-
 
     int ch;
     if (getWorld()->getKey(ch) == true) {
@@ -74,3 +116,15 @@ void Iceman::doSomething()
         }
     }
 }
+//Iceman Class end
+
+
+//Protestor class (parent class)
+Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, 
+    unsigned int hitPoints, unsigned int score) : Agent(world, startX, startY, 
+        Direction::left, imageID, hitPoints) 
+{
+
+
+}
+//Protestor class end
