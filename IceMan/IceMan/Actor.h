@@ -2,135 +2,168 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
-//#include "StudentWorld.h"
+
+// Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class StudentWorld;
 class Actor : public GraphObject
 
 {
 private:
-StudentWorld* myWorld;
-bool isAlive;
+    StudentWorld* myWorld;
+    bool isAlive;
 public:
-    
-    Actor(StudentWorld* world, int imageID, double startX, double startY, Direction dir = right, float size = 1.0, unsigned int depth = 1) : GraphObject(imageID, startX, startY, right, size, depth), myWorld(world), isAlive(true) {}
-    
-    virtual ~Actor() {}
-    
-    bool Alive() const
-    {
-        return isAlive;
-    }
-    
-    StudentWorld* getWorld() const
-    {
-        return myWorld;
-    }
-    
+    //constructor
+    //Actor(StudentWorld* world, int startX, int startY, Direction startDir,bool visible, int imageID, double size, int depth);
+    Actor(StudentWorld* world, int startX, int startY, Direction dir, bool visible, int imageID, double size, int depth);
+
+    //virtual destructor
+    virtual ~Actor();
+
+    //returns the value of isAlive
+    bool Alive() const;
+
+    //returns a pointer to myWorld
+    StudentWorld* getWorld() const;
+
 };
 
 
-class Iceman : public Actor
+class Agent : public Actor
 {
 private:
-    
+    unsigned int health;
 public:
-    Iceman(StudentWorld* world, int startX, int startY) : Actor(world, IID_PLAYER, startX, startY, right, 1.0, 1)
-    {
-        
-        setVisible(true);
-        
-    }
-    void doSomething();
-    std::pair<int, int> getIcemanLocation();
-    void shootSquirt();
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir,
+        int imageID, unsigned int hitPoints);
     
-    
+    virtual void move();
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold();
+    virtual bool huntsIceMan() const;
+    unsigned int getHealth() const;
+
+    // Set state to having gien up protest
+    void setMustLeaveOilField();
+
+    // Set number of ticks until next move
+    void setTicksToNextMove();
 };
 
+
+class Iceman : public Agent
+{
+private:
+
+public:
+    Iceman(StudentWorld* world, int startX, int startY);
+    void doSomething();
+
+};
+
+
+//protestor parent class
+class Protester : public Agent
+{
+public:
+    Protester(StudentWorld* world, int startX, int startY, int imageID,
+        unsigned int hitPoints, unsigned int score);
+    /*
+    virtual void move();
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold();
+    virtual bool huntsIceMan() const;
+
+    // Set state to having gien up protest
+    void setMustLeaveOilField();
+
+    // Set number of ticks until next move
+    void setTicksToNextMove(); */
+};
+
+
+//Regular protestor class
+class RegularProtester : public Protester
+{
+public:
+    RegularProtester(StudentWorld* world, int startX, int startY, int imageID);
+    virtual void move();
+    virtual void addGold();
+};
+
+
+//Hardcore protestor class
+class HardcoreProtester : public Protester
+{
+public:
+    HardcoreProtester(StudentWorld* world, int startX, int startY, int imageID);
+    virtual void move();
+    virtual void addGold();
+};
+
+
+//Iceblock class
 class Ice : public Actor
 {
-private: 
+private:
 public:
-    Ice(StudentWorld* world, int startX, int startY) : Actor(world, IID_ICE, startX, startY, right, 0.25, 3)
-    {
-        setVisible(true);
-        
-    }
-    
-    void disappear();
-    
-    
-    
+    Ice(StudentWorld* world, int startX, int startY);
+    virtual void move();
 };
 
 class Boulder : public Actor
 {
-private:
-    enum State {waiting, stable, falling};
-    State currentState;
-    int waitTime;
-    
-    bool isIceBelow() const;
-    bool canMoveDown() const;
-    bool isNearProtestor() const;
-    bool isNearIceman() const;
-    void annoyActors();
 public:
-    Boulder(StudentWorld* world, int startX, int startY) : Actor(world, IID_BOULDER, startX, startY, down, 1, 1), currentState(waiting), waitTime(0)
-    {
-        setVisible(true);
-        
-    }
+    Boulder(StudentWorld* world, int startX, int startY);
     virtual void move();
     virtual bool canActorsPassThroughMe() const;
-    void doSomething();
-    
 };
 
-//class Squirt : public Actor
-//{
-//private:
-//    int travelDistance;
-//    bool hitsIce() const;
-//    bool hitsProtestor() const;
-//    bool hitsBoulder() const;
-//    
-//public:
-//    Squirt(StudentWorld* world, int startX, int startY, Direction dir) : Actor(world, IID_WATER_SPURT, startX, startY, dir, 1.0, 1)
-//    {
-//        setVisible(true);
-//        
-//        
-//    }
-//    void doSomething();
-//    
-//};
+class Squirt : public Actor
+{
+public:
+    Squirt(StudentWorld* world, int startX, int startY, Direction startDir);
+    virtual void move();
+};
 
+class ActivatingObject : public Actor
+{
+public:
+    ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
+        int soundToPlay, bool activateOnPlayer,
+        bool activateOnProtester, bool initallyActive);
+    virtual void move();
 
+    // Set number of ticks until this object dies
+    void setTicksToLive();
+};
 
+class OilBarrel : public ActivatingObject
+{
+public:
+    OilBarrel(StudentWorld* world, int startX, int startY);
+    virtual void move();
+    virtual bool needsToBePickedUpToFinishLevel() const;
+};
 
+class GoldNugget : public ActivatingObject
+{
+public:
+    GoldNugget(StudentWorld* world, int startX, int startY, bool temporary);
+    virtual void move();
+};
 
+class SonarKit : public ActivatingObject
+{
+public:
+    SonarKit(StudentWorld* world, int startX, int startY);
+    virtual void move();
+};
 
-//
-//class ActivatingObject : public Actor
-//{
-//private:
-//public:
-//    ActivatingObject(StudentWorld* world, int startX, int startY, int imageID, int soundToPlay, bool activateOnPlayer, bool activateOnProtestor, bool initiallyActive);
-//    
-//    
-//    
-//    
-//    
-//    virtual void move();
-//    void setTicksToLive();
-//    
-//    
-//};
-
-
-
-
-
+class WaterPool : public ActivatingObject
+{
+public:
+    WaterPool(StudentWorld* world, int startX, int startY);
+    virtual void move();
+};
 
 #endif // ACTOR_H_

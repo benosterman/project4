@@ -2,165 +2,125 @@
 #include "StudentWorld.h"
 //#include "Iceman.h"
 
+//Actor Class
+Actor::Actor(StudentWorld* world, int startX, int startY, Direction startDir, bool visible, int imageID, double size, int depth) : GraphObject(imageID, startX, startY, startDir, size, depth) {
+    setVisible(visible);
+    myWorld = world;
+    isAlive = true;
+}
+
+Actor::~Actor() {
+
+}
+
+bool Actor::Alive() const {
+    return isAlive;
+}
+
+StudentWorld* Actor::getWorld() const {
+    return myWorld;
+}
+
+
+
+//Ice Class start
+Ice::Ice(StudentWorld* world, int startX, int startY)
+    : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
+
+void Ice::move() {
+
+}
+//Agent Class
+Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir,
+    int imageID, unsigned int hitPoints) : Actor(world, startX, startY,
+        startDir, true, imageID, 1.0, 0)
+{
+    health = hitPoints;
+}
+void Agent::move() {
+
+}
+
+bool Agent::annoy(unsigned int amount) {
+    return false;
+}
+
+void Agent::addGold() {
+
+}
+
+bool Agent::huntsIceMan() const {
+    return false;
+}
+
+unsigned int Agent::getHealth() const {
+    return health;
+}
+
+// Set state to having gien up protest
+void Agent::setMustLeaveOilField() {
+
+}
+
+// Set number of ticks until next move
+void Agent::setTicksToNextMove() {
+
+}
+//Agent Class end
+
+//Iceman Class
+Iceman::Iceman(StudentWorld* world, int startX, int startY)
+    : Agent(world, startX, startY, right, IID_PLAYER, 10)
+{
+
+}
 
 void Iceman::doSomething()
 {
     if (!Alive())
-        
+
     {
         return;
     }
-//    getWorld()->removeIce();
-    
-    
+
     int ch;
     if (getWorld()->getKey(ch) == true) {
-        
+
         switch (ch) {
-            case KEY_PRESS_LEFT:
-                if (getX() > 0)
-                    moveTo(getX() - 1, getY());
-                break;
-            case KEY_PRESS_RIGHT:
-                if (getX() < VIEW_WIDTH - 1)
-                    moveTo(getX() + 1, getY());
-                break;
-            case KEY_PRESS_UP:
-                
-                if (getY() < VIEW_HEIGHT - 1)
-                    moveTo(getX(), getY() + 1);
-                break;
-            case KEY_PRESS_DOWN:
-                
-                if (getY() > 0)
-                    moveTo(getX(), getY() - 1);
-                break;
-            case KEY_PRESS_SPACE:
-                
-                break;
-                
+        case KEY_PRESS_LEFT:
+            if (getX() > 0)
+                moveTo(getX() - 1, getY());
+            break;
+        case KEY_PRESS_RIGHT:
+            if (getX() < VIEW_WIDTH - 1)
+                moveTo(getX() + 1, getY());
+            break;
+        case KEY_PRESS_UP:
+
+            if (getY() < VIEW_HEIGHT - 1)
+                moveTo(getX(), getY() + 1);
+            break;
+        case KEY_PRESS_DOWN:
+
+            if (getY() > 0)
+                moveTo(getX(), getY() - 1);
+            break;
+        case KEY_PRESS_SPACE:
+
+            break;
+
         }
     }
 }
+//Iceman Class end
 
-//void Boulder::doSomething()
-//{
-//    if(!Alive())
-//    {
-//        return;
-//    }
-//    
-//    switch (currentState) {
-//        case stable:
-//            if(!isIceBelow())
-//            {
-//                currentState = waiting;
-//                waitTime = 30;
-//                
-//                
-//            }
-//            
-//            break;
-//            
-//        case waiting:
-//            if (waitTime > 0)
-//            {
-//                waitTime --;
-//            }
-//            
-//        else
-//        {
-//            currentState = falling;
-////            getWorld()->SOUND_FALLING_ROCK;
-//            
-//        }
-//            break;
-//        case falling:
-//            if(canMoveDown())
-//            {
-//                moveTo(getX(), getY() -1);
-//                if(isNearProtestor() || isNearIceman())
-//                {
-//                    annoyActors();
-//                    
-//                }
-//            }
-//            else
-//            {
-////                setDead();
-//                
-//            }
-//            break;
-//    }
-//}
 
-//void Squirt::doSomething()
-//{
-//    if (!Alive())
-//    {
-//        return;
-//    }
-//
-//    if (hitsIce() || hitsProtestor() || hitsBoulder())
-//    {
-////        setDead();
-//        return;
-//    }
-//
-//    switch (getDirection())
-//    {
-//        case up:
-//            moveTo(getX(), getY() + 1);
-//            break;
-//        case down:
-//            moveTo(getX(), getY() - 1);
-//            break;
-//        case left:
-//            moveTo(getX() - 1, getY());
-//            break;
-//        case right:
-//            moveTo(getX() + 1, getY());
-//            break;
-//    }
-//
-//    travelDistance--;
-//
-//    if (travelDistance <= 0)
-//    {
-////            setDead();
-//    }
-//}
+//Protestor class (parent class)
+Protester::Protester(StudentWorld* world, int startX, int startY, int imageID,
+    unsigned int hitPoints, unsigned int score) : Agent(world, startX, startY,
+        Direction::left, imageID, hitPoints)
+{
 
-//void Iceman::shootSquirt()
-//{
-//    // Get current location and direction of Iceman
-//    int x = getX();
-//    int y = getY();
-//    Direction dir = getDirection();
-//
-//    // Adjust the starting location of the Squirt based on Iceman's direction
-//    switch (dir)
-//    {
-//        case up:
-//            if (y + 4 < 60) y += 4; // Ensure Squirt doesn't go out of bounds
-//            else return;
-//            break;
-//        case down:
-//            if (y - 4 >= 0) y -= 4;
-//            else return;
-//            break;
-//        case left:
-//            if (x - 4 >= 0) x -= 4;
-//            else return;
-//            break;
-//        case right:
-//            if (x + 4 < 64) x += 4; // Assuming the field width is 64
-//            else return;
-//            break;
-//    }
-//
-//    // Create a new Squirt object at the adjusted location, facing the same direction as Iceman
-//    Squirt* newSquirt = new Squirt(getWorld(), x, y, dir);
-//    // Add the new Squirt to the game world
-////    getWorld()->addActor(newSquirt);
-//}
+
+}
+//Protestor class end
