@@ -47,6 +47,8 @@ public:
 
     // Set number of ticks until next move
     void setTicksToNextMove();
+
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir, int imageID, unsigned int hitPoints);
 };
 
 
@@ -59,7 +61,6 @@ public:
     void doSomething();
 
 };
-
 
 //protestor parent class
 class Protester : public Agent
@@ -107,6 +108,7 @@ class Ice : public Actor
 private:
 public:
     Ice(StudentWorld* world, int startX, int startY);
+
     virtual void move();
 };
 
@@ -167,3 +169,4 @@ public:
 };
 
 #endif // ACTOR_H_
+

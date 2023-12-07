@@ -24,8 +24,7 @@ StudentWorld* Actor::getWorld() const {
 
 
 //Ice Class start
-Ice::Ice(StudentWorld* world, int startX, int startY)
-    : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
+Ice::Ice(StudentWorld* world, int startX, int startY): Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
 
 void Ice::move() {
 
