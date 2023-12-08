@@ -160,7 +160,31 @@ void StudentWorld::giveIceManWater() {
 
 // Is the Actor a facing toward the IceMan?
 bool StudentWorld::facingTowardIceMan(Actor* a) const {
-    return false;
+    // Retrieve Iceman's current position
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
+
+    // Get Actor's current location and direction
+    int objX = a->getX();
+    int objY = a->getY();
+    GraphObject::Direction dir = a->getDirection();
+
+    // Compare
+    bool ret = false;
+    if (dir == GraphObject::right && objX < icemanX) {
+        ret = true;
+    }
+    else if (dir == GraphObject::left && objX > icemanX) {
+        ret = true;
+    }
+    else if (dir == GraphObject::up && objY < icemanY) {
+        ret = true;
+    }
+    else if (dir == GraphObject::down && objY > icemanY) {
+        ret = true;
+    }
+
+    return ret;
 }
 
 // If the Actor a has a clear line of sight to the IceMan, return
@@ -171,7 +195,25 @@ GraphObject::Direction StudentWorld::lineOfSightToIceMan(Actor* a) const {
 
 // Return whether the Actor a is within radius of IceMan.
 bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
-    return false;
+    // Retrieve Iceman's current position
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
+
+    // Get Actor's current location and direction
+    int objX = a->getX();
+    int objY = a->getY();
+
+    bool ret = false;
+
+    // Check if X position is between four units to the right and left of Iceman
+    if (objX < icemanX + 4 && icemanX - 4 < objX) {
+        ret = true;
+    }
+    else if (objY < icemanY + 4 && icemanY - 4 < objY) {
+        ret = true;
+    }
+    
+    return ret;
 }
 
 // Determine the direction of the first move a quitting protester

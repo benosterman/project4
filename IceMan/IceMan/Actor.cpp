@@ -1,6 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
-//#include "Iceman.h"
+#include <queue>
 
 //Actor Class
 Actor::Actor(StudentWorld* world, int startX, int startY, Direction startDir, bool visible, int imageID, double size, int depth) : GraphObject(imageID, startX, startY, startDir, size, depth) {
@@ -169,15 +169,26 @@ void Protester::move() {
             setTicksToNextMove();
         }
         else {
+            //Iceman* iceman = getWorld()->();
             if (mustLeaveOilField) {
                 //leave oil field
+                
             }
-            else {
-                // Check position and direction of protester, 
+            else if (true) {
+                // Check position and direction of protester, annoy iceman
+                
             }
         }
     }
     // If Protestor is not alive, function will return
+}
+
+//private helper function
+bool Protester::leaveOilField() {
+    queue<Ice*> searchQueue;
+
+
+
 }
 
 // Decrement health -- Is Agent dead? If health drops to or below zero, return true
