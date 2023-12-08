@@ -90,7 +90,7 @@ private:
     int ticksToWaitBetweenMoves;
     int ticksToNextMove;
     int goldAmount;
-
+    bool leaveOilField();
 public:
     Protester(StudentWorld* world, int startX, int startY, int imageID,
         unsigned int hitPoints, unsigned int score);
