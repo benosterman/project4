@@ -30,49 +30,41 @@ Ice::Ice(StudentWorld* world, int startX, int startY)
 void Ice::move() {
 
 }
-//Ice Class end
+// Ice Class end
 
 
 
-//Agent Class
+// Agent Class
 Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
     int imageID, unsigned int hitPoints) : Actor(world, startX, startY, 
         startDir, true, imageID, 1.0, 0) 
 {
     health = hitPoints;
 }
-void Agent::move() {
 
-}
-
-bool Agent::annoy(unsigned int amount) {
-    return false;
-}
-
-void Agent::addGold() {
-
-}
-
-bool Agent::huntsIceMan() const {
-    return false;
-}
-
+// How many hit points does this actor have left?
 unsigned int Agent::getHealth() const {
     return health;
 }
 
-// Set state to having gien up protest
-void Agent::setMustLeaveOilField() {
-
+// Decrement health -- Is Agent dead? If health drops to or below zero, return true
+bool Agent::annoy(unsigned int amount) {
+    health -= amount;
+    if (health > 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
-// Set number of ticks until next move
-void Agent::setTicksToNextMove() {
-
+bool Agent::canPickThingsUp() const {
+    return false;
 }
-//Agent Class end
+// Agent Class End
 
-//Iceman Class
+
+// Iceman Class Start
 Iceman::Iceman(StudentWorld* world, int startX, int startY) 
     : Agent(world, startX, startY, right, IID_PLAYER, 10) 
 {
@@ -116,15 +108,104 @@ void Iceman::doSomething()
         }
     }
 }
-//Iceman Class end
 
 
-//Protestor class (parent class)
+void Iceman::move() {
+
+}
+bool Iceman::annoy(unsigned int amount) {
+    return false;
+}
+
+void Iceman::addGold() {
+
+}
+
+bool Iceman::canDigThroughIce() const {
+    return false;
+}
+
+// Pick up a sonar kit.
+void Iceman::addSonar() {
+
+}
+
+// Pick up water.
+void Iceman::addWater() {
+
+}
+
+// Get amount of gold
+unsigned int Iceman::getGold() const {
+    return 0;
+}
+
+// Get amount of sonar charges
+unsigned int Iceman::getSonar() const {
+    return 0;
+}
+
+// Get amount of water
+unsigned int Iceman::getWater() const {
+    return 0;
+}
+// Iceman Class End
+
+
+// Protestor Class (parent class)
 Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, 
     unsigned int hitPoints, unsigned int score) : Agent(world, startX, startY, 
         Direction::left, imageID, hitPoints) 
 {
-
+    mustLeaveOilField = false;
+    ticksToWaitBetweenMoves = max(0, 3 - static_cast<int>(getWorld()->getLevel()) / 4);
+    ticksToNextMove = ticksToWaitBetweenMoves;
 
 }
-//Protestor class end
+
+void Protester::move() {
+    if (Alive()) {
+        if (ticksToNextMove != 0) {
+            setTicksToNextMove();
+        }
+        else {
+            if (mustLeaveOilField) {
+                //leave oil field
+            }
+            else {
+                // Check position and direction of protester, 
+            }
+        }
+    }
+    // If Protestor is not alive, function will return
+}
+
+// Decrement health -- Is Agent dead? If health drops to or below zero, return true
+bool Protester::annoy(unsigned int amount) {
+    health -= amount;
+    if (getHealth() > 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+void Protester::addGold() {
+    goldAmount++;
+}
+bool Protester::huntsIceMan() const {
+    return false;
+}
+
+// Set state to having gien up protest
+void Protester::setMustLeaveOilField() {
+    if (getHealth() <= 0) {
+        mustLeaveOilField = true;
+    }
+}
+
+// Set number of ticks until next move
+void Protester::setTicksToNextMove() {
+    ticksToNextMove--;
+}
+// Protester Class End

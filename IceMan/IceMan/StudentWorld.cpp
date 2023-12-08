@@ -36,14 +36,12 @@ int StudentWorld::init()
     //create Gold
 
     //create Oil Barrels
-    //200 - static_cast<int>(getLevel())
+    
     //set protester numbers
-    Protester* p = new Protester(this, 64, 64, IID_PROTESTER, 5, 0);
-    addActor(p);
-
     ticksBeforeProtester = std::max(25, 0);
     numTargetProtesters = std::min(15, 2 + static_cast<int>(getLevel()));
     numProtesters = 0;
+    numTicks = 0;
 
 
     setGameStatText(getDisplayText());
@@ -66,6 +64,10 @@ int StudentWorld::move()
         }
     }
     myIceman->doSomething();
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
+
+    clearIce(icemanX, icemanY);
     if (!myIceman->Alive()) {
 
         decLives();
@@ -91,7 +93,26 @@ void StudentWorld::addActor(Actor* a) {
 
 // Clear a 4x4 region of Ice.
 void StudentWorld::clearIce(int x, int y) {
+    // Retrieve Iceman's current position
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
 
+    // Define the range for clearing ice (4x4 area around Iceman)
+    int leftBound = std::max(icemanX, 0);
+    int rightBound = std::min(icemanX + 3, maxIceWidth - 1);
+    int lowerBound = std::max(icemanY, 0);
+    int upperBound = std::min(icemanY + 3, maxIceHeight - 1);
+
+    // Loop through the 4x4 area and clear ice
+    for (int x = leftBound; x <= rightBound; x++) {
+        for (int y = lowerBound; y <= upperBound; y++) {
+            std::unique_ptr<Ice>& ice = oilField[x][y];
+            if (ice) {
+                ice->setVisible(false);
+                ice.reset(); // Optionally remove the ice object
+            }
+        }
+    }
 }
 
 // Can actor move to x,y?

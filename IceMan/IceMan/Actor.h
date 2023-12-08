@@ -31,22 +31,24 @@ public:
 class Agent : public Actor
 {
 private:
+
+protected:
     unsigned int health;
 public:
     Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
         int imageID, unsigned int hitPoints);
-    
-    virtual void move();
-    virtual bool annoy(unsigned int amount);
-    virtual void addGold();
-    virtual bool huntsIceMan() const;
+   
+    // Pick up a gold nugget.
+    virtual void addGold() = 0;
+
+    // How many hit points does this actor have left?
     unsigned int getHealth() const;
 
-    // Set state to having gien up protest
-    void setMustLeaveOilField();
+    // Decrement health -- Is Agent dead? If health drops to or below zero, return true
+    virtual bool annoy(unsigned int amount);
 
-    // Set number of ticks until next move
-    void setTicksToNextMove();
+    // 
+    virtual bool canPickThingsUp() const;
 };
 
 
@@ -58,16 +60,41 @@ public:
     Iceman(StudentWorld* world, int startX, int startY);
     void doSomething();
 
+    virtual void move();
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold();
+    virtual bool canDigThroughIce() const;
+
+    // Pick up a sonar kit.
+    void addSonar();
+
+    // Pick up water.
+    void addWater();
+
+    // Get amount of gold
+    unsigned int getGold() const;
+
+    // Get amount of sonar charges
+    unsigned int getSonar() const;
+
+    // Get amount of water
+    unsigned int getWater() const;
 };
 
 
 //protestor parent class
 class Protester : public Agent
 {
+private:
+    bool mustLeaveOilField;
+    int ticksToWaitBetweenMoves;
+    int ticksToNextMove;
+    int goldAmount;
+
 public:
     Protester(StudentWorld* world, int startX, int startY, int imageID,
         unsigned int hitPoints, unsigned int score);
-    /*
+    
     virtual void move();
     virtual bool annoy(unsigned int amount);
     virtual void addGold();
@@ -77,7 +104,7 @@ public:
     void setMustLeaveOilField();
 
     // Set number of ticks until next move
-    void setTicksToNextMove(); */
+    void setTicksToNextMove();
 };
 
 
