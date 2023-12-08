@@ -25,7 +25,7 @@ int StudentWorld::init()
     //create oil field
     for (int x = 0; x < maxIceWidth; ++x) {
         for (int y = 0; y < maxIceHeight; ++y) {
-            std::unique_ptr<Ice> ice = std::make_unique<Ice>(this, x, y);
+            std::unique_ptr<Ice> ice = std::make_unique<Ice>(this, x + 1, y + 1);
 
             oilField[x][y] = std::move(ice);
         }
@@ -55,7 +55,7 @@ int StudentWorld::move()
     for (auto& actor : actors) {
         if (actor->Alive()) {
             myIceman->doSomething();
-
+            actor->move();
             if (!myIceman->Alive()) {
 
                 decLives();
@@ -75,9 +75,11 @@ int StudentWorld::move()
     }
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
-        Protester* p = new Protester(this, 30, 60, IID_PROTESTER, 5, 0);
+        Protester* p = new Protester(this, 60, 60, IID_PROTESTER, 5, 0);
         addActor(p);
     }
+
+    setGameStatText(getDisplayText());
 
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -98,10 +100,10 @@ void StudentWorld::clearIce(int x, int y) {
     int icemanY = myIceman->getY();
 
     // Define the range for clearing ice (4x4 area around Iceman)
-    int leftBound = std::max(icemanX, 0);
-    int rightBound = std::min(icemanX + 3, maxIceWidth - 1);
-    int lowerBound = std::max(icemanY, 0);
-    int upperBound = std::min(icemanY + 3, maxIceHeight - 1);
+    int leftBound = std::max(icemanX - 1, 0);
+    int rightBound = std::min(icemanX + 2, maxIceWidth - 1);
+    int lowerBound = std::max(icemanY - 1, 0);
+    int upperBound = std::min(icemanY + 2, maxIceHeight - 1);
 
     // Loop through the 4x4 area and clear ice
     for (int x = leftBound; x <= rightBound; x++) {
@@ -171,16 +173,16 @@ bool StudentWorld::facingTowardIceMan(Actor* a) const {
 
     // Compare
     bool ret = false;
-    if (dir == GraphObject::right && objX < icemanX) {
+    if (dir == GraphObject::right && objX < icemanX && icemanY < objY + 4 * a->getSize() && icemanY >= objY - 3 * a->getSize()) {
         ret = true;
     }
-    else if (dir == GraphObject::left && objX > icemanX) {
+    else if (dir == GraphObject::left && objX > icemanX && icemanY < objY + 4*a->getSize() && icemanY >= objY - 3*a->getSize()) {
         ret = true;
     }
-    else if (dir == GraphObject::up && objY < icemanY) {
+    else if (dir == GraphObject::up && objY < icemanY && icemanX >= objX - 3 * a->getSize() && icemanX < objX + 4 * a->getSize()) {
         ret = true;
     }
-    else if (dir == GraphObject::down && objY > icemanY) {
+    else if (dir == GraphObject::down && objY > icemanY && icemanX >= objX - 3 * a->getSize() && icemanX < objX + 4 * a->getSize()) {
         ret = true;
     }
 
@@ -206,10 +208,7 @@ bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
     bool ret = false;
 
     // Check if X position is between four units to the right and left of Iceman
-    if (objX < icemanX + 4 && icemanX - 4 < objX) {
-        ret = true;
-    }
-    else if (objY < icemanY + 4 && icemanY - 4 < objY) {
+    if (objX < icemanX + 4 * radius && icemanX - 3 * radius <= objX && objY < icemanY + 4 * radius && icemanY - radius * 3 <= objY) {
         ret = true;
     }
     
@@ -234,10 +233,11 @@ std::string StudentWorld::getDisplayText() const {
     int lives = static_cast<int>(getLives());
     int health = static_cast<int>(myIceman->getHealth()) * 10;
     //int gold = static_cast<int>()
+    int score = static_cast<int>(getScore());
     
     string ret = "Lvl: " + std::to_string(level) 
         + " Lives: " + to_string(lives) + " Health : " + to_string(health) + "% Wtr : "
-        + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : 0";
+        + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : " + to_string(score);
 
     return ret;
 }

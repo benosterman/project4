@@ -25,6 +25,34 @@ public:
     //returns a pointer to myWorld
     StudentWorld* getWorld() const;
 
+    // Action to perform each tick.
+    virtual void move() = 0;
+
+    // Mark this actor as dead.
+    void setDead();
+
+    // Annoy this actor.
+    virtual bool annoy(unsigned int amt);
+
+    // Can other actors pass through this actor?
+    virtual bool canActorsPassThroughMe() const;
+
+    // Can this actor dig through Ice?
+    virtual bool canDigThroughIce() const;
+
+    // Can this actor pick items up?
+    virtual bool canPickThingsUp() const;
+
+    // Does this actor hunt the IceMan?
+    virtual bool huntsIceMan() const;
+
+    // Can this actor need to be picked up to finish the level?
+    virtual bool needsToBePickedUpToFinishLevel() const;
+
+    // Move this actor to x,y if possible, and return true; otherwise,
+    // return false without moving.
+    bool moveToIfPossible(int x, int y);
+
 };
 
 
@@ -87,10 +115,21 @@ class Protester : public Agent
 {
 private:
     bool mustLeaveOilField;
+
+    //ticks to determine move()
     int ticksToWaitBetweenMoves;
     int ticksToNextMove;
+
+    //
+    int restingTicks;
+
     int goldAmount;
+
+
+    int numSquaresToMoveInCurrentDirection;
+
     bool leaveOilField();
+
 public:
     Protester(StudentWorld* world, int startX, int startY, int imageID,
         unsigned int hitPoints, unsigned int score);

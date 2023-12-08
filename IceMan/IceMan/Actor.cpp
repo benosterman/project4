@@ -21,6 +21,48 @@ StudentWorld* Actor::getWorld() const {
     return myWorld;
 }
 
+// Mark this actor as dead.
+void Actor::setDead() {
+
+}
+
+// Annoy this actor.
+bool Actor::annoy(unsigned int amt) {
+    return false;
+}
+
+// Can other actors pass through this actor?
+bool Actor::canActorsPassThroughMe() const {
+    return false;
+}
+
+// Can this actor dig through Ice?
+bool Actor::canDigThroughIce() const {
+    return false;
+}
+
+// Can this actor pick items up?
+bool Actor::canPickThingsUp() const {
+    return false;
+}
+
+// Does this actor hunt the IceMan?
+bool Actor::huntsIceMan() const {
+    return false;
+}
+
+// Can this actor need to be picked up to finish the level?
+bool Actor::needsToBePickedUpToFinishLevel() const {
+    return false;
+}
+
+// Move this actor to x,y if possible, and return true; otherwise,
+// return false without moving.
+bool Actor::moveToIfPossible(int x, int y) {
+    return false;
+}
+// Actor Class End
+
 
 
 //Ice Class start
@@ -160,7 +202,7 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID,
     mustLeaveOilField = false;
     ticksToWaitBetweenMoves = max(0, 3 - static_cast<int>(getWorld()->getLevel()) / 4);
     ticksToNextMove = ticksToWaitBetweenMoves;
-
+    numSquaresToMoveInCurrentDirection = min(64, static_cast<int>(getWorld()->getScore())%31);
 }
 
 void Protester::move() {
@@ -169,15 +211,18 @@ void Protester::move() {
             setTicksToNextMove();
         }
         else {
-            //Iceman* iceman = getWorld()->();
             if (mustLeaveOilField) {
                 //leave oil field
                 
             }
-            else if (true) {
+            else if (getWorld()->isNearIceMan(this, this->getSize()) && getWorld()->facingTowardIceMan(this)) {
                 // Check position and direction of protester, annoy iceman
-                
+                getWorld()->annoyIceMan();
             }
+            
+            
+            // Reset ticks until next move
+            ticksToNextMove = ticksToWaitBetweenMoves;
         }
     }
     // If Protestor is not alive, function will return
@@ -188,7 +233,7 @@ bool Protester::leaveOilField() {
     queue<Ice*> searchQueue;
 
 
-
+    return false;
 }
 
 // Decrement health -- Is Agent dead? If health drops to or below zero, return true
