@@ -13,62 +13,25 @@ using namespace std;
 
 class StudentWorld : public GameWorld
 {
-	private:
-std::vector<std::unique_ptr<Actor>> actors;
-Iceman* myIceman;
-int maxWidth = 63;
-int maxHeight = 59;
+private:
+    std::vector<Actor*> actors;
+    Iceman* myIceman;
+    static const int maxIceWidth = 63;
+    static const int maxIceHeight = 59;
+    unique_ptr<Ice> oilField[maxIceWidth][maxIceHeight];
+
+    unsigned int numTicks;
+    int ticksBeforeProtester;
+    int numTargetProtesters;
+    int numProtesters;
+
 public:
-    StudentWorld(std::string assetDir)
-        : GameWorld(assetDir)
-    {
-    }
+    StudentWorld(std::string assetDir);
+    virtual ~StudentWorld();
 
-    virtual int init()
-    {
-        int initialX = 30;
-        int initialY = 60;
-
-        myIceman = new Iceman(this, initialX, initialY);
-        for (int x = 0; x < maxWidth; ++x) {
-            for (int y = 0; y < maxHeight; ++y) {
-                std::unique_ptr<Ice> ice = std::make_unique<Ice>(this, x, y);
-
-
-                actors.push_back(std::move(ice));
-            }
-        }
-        return GWSTATUS_CONTINUE_GAME;
-    }
-
-    virtual int move() override
-    {
-        for (auto& actor : actors) {
-            if (actor->Alive()) {
-                myIceman->doSomething();
-
-                if (!myIceman->Alive()) {
-
-                    decLives();
-                    return GWSTATUS_PLAYER_DIED;
-                }
-            }
-        }
-        myIceman->doSomething();
-        if (!myIceman->Alive()) {
-
-            decLives();
-            return GWSTATUS_PLAYER_DIED;
-        }
-
-
-        return GWSTATUS_CONTINUE_GAME;
-    }
-
-    virtual void cleanUp()
-    {
-    }
->>>>>>> 0428870c5074227cadb951d4d7871170b07dcff6
+    virtual int init();
+    virtual int move() override;
+    virtual void cleanUp();
 
 
     // Add an actor to the world.
@@ -80,7 +43,52 @@ public:
     // Can actor move to x,y?
     bool canActorMoveTo(Actor* a, int x, int y) const;
 
+    // Annoy all other actors within radius of annoyer, returning the
+    // number of actors annoyed.
+    int annoyAllNearbyActors(Actor* annoyer, int points, int radius);
 
+    // Reveal all objects within radius of x,y.
+    void revealAllNearbyObjects(int x, int y, int radius);
+
+    // If the IceMan is within radius of a, return a pointer to the
+    // IceMan, otherwise null.
+    Actor* findNearbyIceMan(Actor* a, int radius) const;
+
+    // If at least one actor that can pick things up is within radius of a,
+    // return a pointer to one of them, otherwise null.
+    Actor* findNearbyPickerUpper(Actor* a, int radius) const;
+
+    // Annoy the IceMan.
+    void annoyIceMan();
+
+    // Give IceMan some sonar charges.
+    void giveIceManSonar();
+
+    // Give IceMan some water.
+    void giveIceManWater();
+
+    // Is the Actor a facing toward the IceMan?
+    bool facingTowardIceMan(Actor* a) const;
+
+    // If the Actor a has a clear line of sight to the IceMan, return
+    // the direction to the IceMan, otherwise GraphObject::none.
+    GraphObject::Direction lineOfSightToIceMan(Actor* a) const;
+
+    // Return whether the Actor a is within radius of IceMan.
+    bool isNearIceMan(Actor* a, int radius) const;
+
+    // Determine the direction of the first move a quitting protester
+    // makes to leave the oil field.
+    GraphObject::Direction determineFirstMoveToExit(int x, int y);
+
+    // Determine the direction of the first move a hardcore protester
+    // makes to approach the IceMan.
+    GraphObject::Direction determineFirstMoveToIceMan(int x, int y);
+
+    // Helper Function that sets the text at the top of the screen
+    std::string getDisplayText() const;
 };
+
+
 
 #endif // STUDENTWORLD_H_

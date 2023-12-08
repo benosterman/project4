@@ -99,10 +99,10 @@ void StudentWorld::clearIce(int x, int y) {
     int icemanY = myIceman->getY();
 
     // Define the range for clearing ice (4x4 area around Iceman)
-    int leftBound = std::max(icemanX - 2, 0);
-    int rightBound = std::min(icemanX + 2, maxIceWidth - 1);
-    int lowerBound = std::max(icemanY - 2, 0);
-    int upperBound = std::min(icemanY + 2, maxIceHeight - 1);
+    int leftBound = std::max(icemanX, 0);
+    int rightBound = std::min(icemanX + 3, maxIceWidth - 1);
+    int lowerBound = std::max(icemanY, 0);
+    int upperBound = std::min(icemanY + 3, maxIceHeight - 1);
 
     // Loop through the 4x4 area and clear ice
     for (int x = leftBound; x <= rightBound; x++) {
