@@ -30,8 +30,19 @@ int StudentWorld::init()
             oilField[x][y] = std::move(ice);
         }
     }
+
+    //clear starting columns in oil field
+    for (int x = 29; x < 33; x++) {
+        for (int y = 4; y < 59; y++) {
+            oilField[x][y].reset(); // Reset each unique pointer
+        }
+
+    }
     
     //create Boulders
+    Boulder* boulder = new Boulder(this, 15, 40);
+    boulder->move();
+    addActor(boulder);
 
     //create Gold
 
@@ -49,12 +60,13 @@ int StudentWorld::init()
     return GWSTATUS_CONTINUE_GAME;
 }
 
+
 int StudentWorld::move()
 {
     numTicks++;
     for (auto& actor : actors) {
         if (actor->Alive()) {
-            myIceman->doSomething();
+            //myIceman->doSomething();
             actor->move();
             if (!myIceman->Alive()) {
 
@@ -63,7 +75,11 @@ int StudentWorld::move()
             }
         }
     }
+
+    //iceman stuff
     myIceman->doSomething();
+
+    // clear ice
     int icemanX = myIceman->getX();
     int icemanY = myIceman->getY();
 
@@ -75,7 +91,7 @@ int StudentWorld::move()
     }
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
-        Protester* p = new Protester(this, 60, 60, IID_PROTESTER, 5, 0);
+        Protester* p = new Protester(this, 40, 60, IID_PROTESTER, 5, 0);
         addActor(p);
     }
 
@@ -85,7 +101,28 @@ int StudentWorld::move()
 }
 
 void StudentWorld::cleanUp() {
+    
+    while (!actors.empty()){
+        delete actors.back();
+        actors.pop_back();
+    }
 
+    delete myIceman;
+
+    //delete oilField
+    for (int i = 0; i < maxIceWidth; ++i) {
+        for (int j = 0; j < maxIceHeight; ++j) {
+            std::unique_ptr<Ice>& ice = oilField[i][j];
+            if (ice) {
+                oilField[i][j].reset(); // Reset each unique pointer
+            }
+            
+        }
+    }
+
+    
+    cout << "cleanup!!!" << endl;
+    
 }
 
 // Add an actor to the world.
@@ -95,15 +132,11 @@ void StudentWorld::addActor(Actor* a) {
 
 // Clear a 4x4 region of Ice.
 void StudentWorld::clearIce(int x, int y) {
-    // Retrieve Iceman's current position
-    int icemanX = myIceman->getX();
-    int icemanY = myIceman->getY();
-
-    // Define the range for clearing ice (4x4 area around Iceman)
-    int leftBound = std::max(icemanX - 1, 0);
-    int rightBound = std::min(icemanX + 2, maxIceWidth - 1);
-    int lowerBound = std::max(icemanY - 1, 0);
-    int upperBound = std::min(icemanY + 2, maxIceHeight - 1);
+    // Define the range for clearing ice (4x4 area around object)
+    int leftBound = std::max(x - 1, 0);
+    int rightBound = std::min(x + 2, maxIceWidth - 1);
+    int lowerBound = std::max(y - 1, 0);
+    int upperBound = std::min(y + 2, maxIceHeight - 1);
 
     // Loop through the 4x4 area and clear ice
     for (int x = leftBound; x <= rightBound; x++) {
@@ -112,19 +145,50 @@ void StudentWorld::clearIce(int x, int y) {
             if (ice) {
                 ice->setVisible(false);
                 ice.reset(); // Optionally remove the ice object
+                playSound(SOUND_DIG);
             }
         }
     }
+
 }
 
 // Can actor move to x,y?
 bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const {
-    return false;
+    bool ret = true;
+    for (auto& currentActor : actors) {
+        if (currentActor->canActorsPassThroughMe() == false) {
+            // left and lower bounds are ON the actor, right and upper bounds are ONE SQUARE past the actor
+            int leftBound = currentActor->getX();
+            int rightBound = currentActor->getX() + currentActor->getSize() * 4;
+            int lowerBound = currentActor->getY();
+            int upperBound = currentActor->getY() + currentActor->getSize() * 4;
+
+            // check to see if new coordinates are within the range of the immovable actor
+            if (x >= leftBound && x < rightBound || y >= lowerBound && y < upperBound) {
+                ret = false;
+            }
+            
+        }
+    }
+    return ret;
 }
 
 // Annoy all other actors within radius of annoyer, returning the
 // number of actors annoyed.
 int StudentWorld::annoyAllNearbyActors(Actor* annoyer, int points, int radius) {
+    // Retrieve Iceman's current position
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
+
+    // Get annoyer's current location
+    int objX = annoyer->getX();
+    int objY = annoyer->getY();
+
+    // Check if X position is between (radius) units to the right and left of Iceman
+    if (objX < icemanX + 4 * radius && icemanX - 3 * radius <= objX && objY < icemanY + 4 * radius && icemanY - radius * 3 <= objY) {
+        annoyIceMan(points);
+    }
+
     return 0;
 }
 
@@ -146,8 +210,12 @@ Actor* StudentWorld::findNearbyPickerUpper(Actor* a, int radius) const {
 }
 
 // Annoy the IceMan.
-void StudentWorld::annoyIceMan() {
-
+void StudentWorld::annoyIceMan(unsigned int amount) {
+    // Annoy checks the health of Iceman, if it returns true, iceman has died
+    if (myIceman->annoy(amount)) {
+        // Set state of Alive to false
+        myIceman->setDead();
+    }
 }
 
 // Give IceMan some sonar charges.
@@ -192,25 +260,65 @@ bool StudentWorld::facingTowardIceMan(Actor* a) const {
 // If the Actor a has a clear line of sight to the IceMan, return
 // the direction to the IceMan, otherwise GraphObject::none.
 GraphObject::Direction StudentWorld::lineOfSightToIceMan(Actor* a) const {
-    return GraphObject::Direction::right;
+    GraphObject::Direction dir = GraphObject::Direction::none;
+    if (facingTowardIceMan(a)) {
+        int x = a->getX();
+        int y = a->getY();
+
+        
+    }
+
+    return dir;
 }
 
-// Return whether the Actor a is within radius of IceMan.
+// Return whether the Actor a is within radius of IceMan. (Set radius to 3 when calling)
 bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
-    // Retrieve Iceman's current position
+    // Retrieve Iceman's range with radius
     int icemanX = myIceman->getX();
     int icemanY = myIceman->getY();
 
-    // Get Actor's current location and direction
-    int objX = a->getX();
-    int objY = a->getY();
+    // Set Iceman's bounds
+    int iceLeftSide = icemanX - radius + 1;
+    int iceRightSide = icemanX + radius;
+    int iceBottomSide = icemanY - radius + 1;
+    int iceTopSide = icemanX + radius;
+
+
+    // Get Actor's outer coordinates
+    int leftbound = a->getX() - 1;
+    int rightbound = a->getX() + 2;
+    int lowerbound = a->getY() - 1;
+    int upperbound = a->getY() + 2;
 
     bool ret = false;
 
-    // Check if X position is between four units to the right and left of Iceman
-    if (objX < icemanX + 4 * radius && icemanX - 3 * radius <= objX && objY < icemanY + 4 * radius && icemanY - radius * 3 <= objY) {
+    // Check if (radius) units around iceman are in object bounds
+
+    //check if left side of Iceman collides with object
+    if ((iceLeftSide <= rightbound && !(iceLeftSide <= leftbound - 4)) &&
+            ((icemanY - radius + 1 <= upperbound && icemanY + radius >= upperbound) ||
+                (icemanY - radius + 1 <= lowerbound && icemanY + radius >= lowerbound))) {
         ret = true;
     }
+    //check if right side collies with object
+    else if ((icemanX + radius >= leftbound && !(iceRightSide >= rightbound + 4)) &&
+        ((icemanY - radius + 1 <= upperbound && icemanY + radius >= upperbound) ||
+            (icemanY - radius + 1 <= lowerbound && icemanY + radius >= lowerbound))) {
+        ret = true;
+    }
+    //check if bottom collides with object
+    else if ((icemanY - radius + 1 >= upperbound) &&
+        ((icemanX - radius + 1 <= rightbound && icemanX + radius >= rightbound) ||
+            (icemanX - radius + 1 <= leftbound && icemanX + radius >= leftbound))) {
+        ret = true;
+    }
+    //check if top collides with object
+    else if( (icemanY + radius >= lowerbound) &&
+            ((icemanX - radius + 1 <= rightbound && icemanX + radius >= rightbound) ||
+                (icemanX - radius + 1 <= leftbound && icemanX + radius >= leftbound))) {
+        ret = true;
+    }
+
     
     return ret;
 }
@@ -240,4 +348,14 @@ std::string StudentWorld::getDisplayText() const {
         + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : " + to_string(score);
 
     return ret;
+}
+
+bool StudentWorld::hasIceAt(int x, int y) const {
+    // Check if the coordinates are within the bounds of the oil field
+    if (x < 0 || x >= maxIceWidth || y < 0 || y >= maxIceHeight) {
+        return false;
+    }
+
+    // Check if there is ice at the specified location
+    return oilField[x][y] != nullptr;
 }

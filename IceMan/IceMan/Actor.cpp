@@ -23,7 +23,7 @@ StudentWorld* Actor::getWorld() const {
 
 // Mark this actor as dead.
 void Actor::setDead() {
-
+    isAlive = false;
 }
 
 // Annoy this actor.
@@ -33,7 +33,7 @@ bool Actor::annoy(unsigned int amt) {
 
 // Can other actors pass through this actor?
 bool Actor::canActorsPassThroughMe() const {
-    return false;
+    return true;
 }
 
 // Can this actor dig through Ice?
@@ -59,6 +59,7 @@ bool Actor::needsToBePickedUpToFinishLevel() const {
 // Move this actor to x,y if possible, and return true; otherwise,
 // return false without moving.
 bool Actor::moveToIfPossible(int x, int y) {
+
     return false;
 }
 // Actor Class End
@@ -155,8 +156,17 @@ void Iceman::doSomething()
 void Iceman::move() {
 
 }
+
+// Check health of Iceman
 bool Iceman::annoy(unsigned int amount) {
-    return false;
+    health -= amount;
+
+    if (static_cast<int>(health) > 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
 void Iceman::addGold() {
@@ -197,7 +207,7 @@ unsigned int Iceman::getWater() const {
 // Protestor Class (parent class)
 Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, 
     unsigned int hitPoints, unsigned int score) : Agent(world, startX, startY, 
-        Direction::left, imageID, hitPoints) 
+        Direction::right, imageID, hitPoints) 
 {
     mustLeaveOilField = false;
     ticksToWaitBetweenMoves = max(0, 3 - static_cast<int>(getWorld()->getLevel()) / 4);
@@ -215,9 +225,31 @@ void Protester::move() {
                 //leave oil field
                 
             }
-            else if (getWorld()->isNearIceMan(this, this->getSize()) && getWorld()->facingTowardIceMan(this)) {
+            else if (getWorld()->isNearIceMan(this, 2) && getWorld()->facingTowardIceMan(this)) {
                 // Check position and direction of protester, annoy iceman
-                getWorld()->annoyIceMan();
+                getWorld()->annoyIceMan(2);
+            }
+            
+            //take a step in direction it is facing
+            if (getDirection() == right) {
+                if (moveToIfPossible(getX() + 1, getY())) {
+
+                }
+            }
+            else if (getDirection() == left) {
+                if (moveToIfPossible(getX() - 1, getY())) {
+
+                }
+            }
+            else if (getDirection() == up) {
+                if (moveToIfPossible(getX(), getY() + 1)) {
+
+                }
+            }
+            else if (getDirection() == down) {
+                if (moveToIfPossible(getX(), getY() - 1)) {
+
+                }
             }
             
             
@@ -265,3 +297,102 @@ void Protester::setTicksToNextMove() {
     ticksToNextMove--;
 }
 // Protester Class End
+
+
+Boulder::Boulder(StudentWorld* world, int startX, int startY) : Actor(world, startX, startY, down, true, IID_BOULDER, 1.0, 1)
+{
+    setVisible(true);
+    currentState = stable;
+
+    getWorld()->clearIce(startX, startY);
+}
+
+bool Boulder::isIceBelow()
+{
+    StudentWorld* world = getWorld();
+    int x = getX();
+    int y = getY();
+
+    for (int i = 0; i < 10; ++i) {
+        if (world->hasIceAt(x, y - 2) || 
+            world->hasIceAt(x-1, y - 2) ||
+            world->hasIceAt(x+1, y - 2) ||
+            world->hasIceAt(x+2, y - 2)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Boulder::isNearIceman() {
+    return getWorld()->isNearIceMan(this, 3);
+}
+
+bool Boulder::isNearProtestor()
+{
+    return false;
+}
+
+void Boulder::annoyActors()
+{
+    getWorld()->annoyAllNearbyActors(this, 100, 1);
+}
+
+bool Boulder::canActorsPassThroughMe() const {
+    return false;
+}
+
+void Boulder::move()
+{
+    if (Alive()) {
+        switch (currentState) {
+        case stable:
+            if (!isIceBelow())
+            {
+                currentState = waiting;
+                waitTime = 0;
+            }
+
+            break;
+
+        case waiting:
+            if (waitTime < 30)
+            {
+                waitTime++;
+            }
+
+            else
+            {
+                currentState = falling;
+                getWorld()->playSound(SOUND_FALLING_ROCK);
+
+            }
+            break;
+        case falling:
+            if (!isIceBelow())
+            {
+
+                moveTo(getX(), getY() - 1);
+                if (isNearIceman() && getWorld()->facingTowardIceMan(this)) {
+                    getWorld()->annoyIceMan(100);
+                }
+                /*
+                if (isNearProtestor() || isNearIceman())
+                {
+                    annoyActors();
+
+                }*/
+            }
+            else {
+                currentState = dead;
+            }
+            break;
+        case dead:
+            setVisible(false);
+            break;
+        }
+        
+
+    }
+}
+

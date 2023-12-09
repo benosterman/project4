@@ -125,6 +125,7 @@ private:
 
     int goldAmount;
 
+    int timeSinceLastTurn;
 
     int numSquaresToMoveInCurrentDirection;
 
@@ -178,6 +179,14 @@ public:
 
 class Boulder : public Actor
 {
+private:
+    enum State { waiting, stable, falling, dead };
+    State currentState;
+    int waitTime;
+    bool isIceBelow();
+    bool isNearProtestor();
+    bool isNearIceman();
+    void annoyActors();
 public:
     Boulder(StudentWorld* world, int startX, int startY);
     virtual void move();

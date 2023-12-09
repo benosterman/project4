@@ -33,7 +33,6 @@ public:
     virtual int move() override;
     virtual void cleanUp();
 
-
     // Add an actor to the world.
     void addActor(Actor* a);
 
@@ -59,14 +58,14 @@ public:
     Actor* findNearbyPickerUpper(Actor* a, int radius) const;
 
     // Annoy the IceMan.
-    void annoyIceMan();
+    void annoyIceMan(unsigned int amount);
 
     // Give IceMan some sonar charges.
     void giveIceManSonar();
 
     // Give IceMan some water.
     void giveIceManWater();
-
+    
     // Is the Actor a facing toward the IceMan?
     bool facingTowardIceMan(Actor* a) const;
 
@@ -87,6 +86,8 @@ public:
 
     // Helper Function that sets the text at the top of the screen
     std::string getDisplayText() const;
+
+    bool hasIceAt(int x, int y) const;
 };
 
 #endif // STUDENTWORLD_H_
