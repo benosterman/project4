@@ -4,7 +4,7 @@ using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
 {
-	return new StudentWorld(assetDir);
+    return new StudentWorld(assetDir);
 }
 
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
@@ -91,7 +91,9 @@ int StudentWorld::move()
     }
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
+
         RegularProtester* p = new RegularProtester(this, 60, 60, IID_PROTESTER);
+
         addActor(p);
     }
 
@@ -166,6 +168,7 @@ bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const {
 
             // If both x and y touching, then the entities are touching
             return !(xTouching && yTouching);
+
         }
     }
     return ret;
@@ -258,8 +261,7 @@ bool StudentWorld::facingTowardIceMan(Actor* a) const {
 // If the Actor a has a clear line of sight to the IceMan, return
 // the direction to the IceMan, otherwise GraphObject::none.
 GraphObject::Direction StudentWorld::lineOfSightToIceMan(Actor* a) const {
-    GraphObject::Direction dir = GraphObject::Direction::none;
-    
+    GraphObject::Direction dir = GraphObject::Direction::none;    
     int objX = a->getX();
     int objY = a->getY();
 
@@ -301,13 +303,13 @@ GraphObject::Direction StudentWorld::lineOfSightToIceMan(Actor* a) const {
 
     }
         
-    
 
     return dir;
 }
 
 // Return whether the Actor a is within radius of IceMan. (Set radius to 3 when calling)
 bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
+
    
     // Check if the entities are touching in the x-axis
     bool xTouching = (myIceman->getX() <= a->getX() + radius) && (a->getX() <= myIceman->getX() + radius);
@@ -318,7 +320,6 @@ bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
     // If both x and y touching, then the entities are touching
     return (xTouching && yTouching);
 
-    
 }
 
 // Determine the direction of the first move a quitting protester
@@ -341,6 +342,7 @@ std::string StudentWorld::getDisplayText() const {
     //int gold = static_cast<int>()
     int score = static_cast<int>(getScore());
     
+
     string ret = "Lvl: " + std::to_string(level) 
         + " Lives: " + to_string(lives) + " Health : " + to_string(health) + "% Wtr : "
         + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : " + to_string(score);
@@ -356,4 +358,6 @@ bool StudentWorld::hasIceAt(int x, int y) const {
 
     // Check if there is ice at the specified location
     return oilField[x][y] != nullptr;
+
 }
+

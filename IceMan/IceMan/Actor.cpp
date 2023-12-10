@@ -1,8 +1,10 @@
 #include "Actor.h"
 #include "StudentWorld.h"
 #include <queue>
+
 #include <iostream>
 #include <random>
+
 
 //Actor Class
 Actor::Actor(StudentWorld* world, int startX, int startY, Direction startDir, bool visible, int imageID, double size, int depth) : GraphObject(imageID, startX, startY, startDir, size, depth) {
@@ -61,12 +63,14 @@ bool Actor::needsToBePickedUpToFinishLevel() const {
 // Move this actor to x,y if possible, and return true; otherwise,
 // return false without moving.
 bool Actor::moveToIfPossible(int x, int y) {
+
     if (x >= 1 && x < 61 && y >= 1 && y <= 60) {
         if (getWorld()->canActorMoveTo(this, x, y)) {
             this->moveTo(x, y);
             return true;
         }
     }
+
     return false;
 }
 // Actor Class End
@@ -74,17 +78,20 @@ bool Actor::moveToIfPossible(int x, int y) {
 
 
 
+//Ice Class start
+Ice::Ice(StudentWorld* world, int startX, int startY)
+
+
 
 //Ice Class start
 Ice::Ice(StudentWorld* world, int startX, int startY) 
+
     : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
 
 void Ice::move() {
 
 }
 // Ice Class end
-
-
 
 
 
@@ -118,6 +125,19 @@ bool Agent::canPickThingsUp() const {
 }
 // Agent Class End
 
+//Squirt Class
+Squirt::Squirt(StudentWorld* world, int startX, int startY) : Actor(world, startX, startY, right, true, IID_WATER_SPURT, 1.0, 1)
+{
+    setVisible(true);
+    
+    
+}
+
+void Squirt::move()
+{
+    moveTo(getX(), getY() - 1);
+    
+}
 
 
 
@@ -126,6 +146,7 @@ bool Agent::canPickThingsUp() const {
 // Iceman Class Start
 Iceman::Iceman(StudentWorld* world, int startX, int startY) 
     : Agent(world, startX, startY, right, IID_PLAYER, 10) 
+
 {
 
 }
@@ -151,17 +172,17 @@ void Iceman::doSomething()
                 moveToIfPossible(getX() + 1, getY());
             break;
         case KEY_PRESS_UP:
-
             if (getY() < VIEW_HEIGHT - 1)
                 moveToIfPossible(getX(), getY() + 1);
             break;
         case KEY_PRESS_DOWN:
-
             if (getY() > 0)
                 moveToIfPossible(getX(), getY() - 1);
             break;
         case KEY_PRESS_SPACE:
-
+            Squirt* squirt = new Squirt(getWorld(), getX(), getY());
+            getWorld()->addActor(squirt);
+            squirt->move();
             break;
 
         }
@@ -235,13 +256,15 @@ Protester::Protester(StudentWorld* world, int startX, int startY,
 }
 
 void Protester::move() {
-    
+
 }
 
 // Decrement health -- Is Agent dead? If health drops to or below zero, return true
 bool Protester::annoy(unsigned int amount) {
     health -= amount;
+
     setState(resting);
+
     if (getHealth() > 0) {
         return false;
     }
@@ -253,6 +276,7 @@ bool Protester::annoy(unsigned int amount) {
 void Protester::addGold() {
     goldAmount++;
 }
+
 
 bool Protester::huntsIceMan() const {
     return false;
@@ -269,6 +293,7 @@ void Protester::setMustLeaveOilField() {
 void Protester::setTicksToNextMove() {
     ticksToNextMove--;
 }
+
 
 // reset numSquaresInCurrentDirection to a random int
 void Protester::resetNumSquares() {
@@ -454,21 +479,14 @@ bool Boulder::isIceBelow()
     StudentWorld* world = getWorld();
     int x = getX();
     int y = getY();
+
     if (world->hasIceAt(x, y - 2) ||
         world->hasIceAt(x - 1, y - 2) ||
         world->hasIceAt(x + 1, y - 2) ||
         world->hasIceAt(x + 2, y - 2)) {
         return true;
     }
-    /*
-    for (int i = 0; i < 10; ++i) {
-        if (world->hasIceAt(x, y - 2) || 
-            world->hasIceAt(x-1, y - 2) ||
-            world->hasIceAt(x+1, y - 2) ||
-            world->hasIceAt(x+2, y - 2)) {
-            return true;
-        }
-    }*/
+    
     return false;
 }
 
@@ -543,4 +561,4 @@ void Boulder::move()
 
     }
 }
-//Bouler End
+

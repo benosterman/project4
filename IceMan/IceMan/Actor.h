@@ -63,6 +63,7 @@ private:
 protected:
     unsigned int health;
 public:
+
     Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
         int imageID, unsigned int hitPoints);
    
@@ -75,7 +76,6 @@ public:
     // Decrement health -- Is Agent dead? If health drops to or below zero, return true
     virtual bool annoy(unsigned int amount);
 
-    // 
     virtual bool canPickThingsUp() const;
 };
 
@@ -113,6 +113,7 @@ public:
 //protestor parent class
 class Protester : public Agent
 {
+
 protected:
     enum state { hunting, leaving, resting };
     state currentState;
@@ -139,6 +140,7 @@ public:
     virtual bool annoy(unsigned int amount);
     virtual void addGold();
     virtual bool huntsIceMan() const;
+
 
     // Set state to having given up protest
     void setMustLeaveOilField();
@@ -171,6 +173,7 @@ public:
     RegularProtester(StudentWorld* world, int startX, int startY, int imageID);
     virtual void move();
     virtual void addGold();
+
 };
 
 
@@ -191,6 +194,7 @@ private:
 public:
     Ice(StudentWorld* world, int startX, int startY);
     virtual void move();
+
 };
 
 class Boulder : public Actor
@@ -257,4 +261,6 @@ public:
     virtual void move();
 };
 
+
 #endif // ACTOR_H_
+
