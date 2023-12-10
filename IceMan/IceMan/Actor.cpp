@@ -79,14 +79,8 @@ bool Actor::moveToIfPossible(int x, int y) {
 
 
 //Ice Class start
-Ice::Ice(StudentWorld* world, int startX, int startY)
-
-
-
-//Ice Class start
-Ice::Ice(StudentWorld* world, int startX, int startY) 
-
-    : Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
+Ice::Ice(StudentWorld* world, int startX, int startY) : 
+    Actor(world, startX, startY, right, true, IID_ICE, 0.25, 3) { }
 
 void Ice::move() {
 
@@ -126,7 +120,7 @@ bool Agent::canPickThingsUp() const {
 // Agent Class End
 
 //Squirt Class
-Squirt::Squirt(StudentWorld* world, int startX, int startY) : Actor(world, startX, startY, right, true, IID_WATER_SPURT, 1.0, 1)
+Squirt::Squirt(StudentWorld* world, int startX, int startY, Direction dir) : Actor(world, startX, startY, dir, true, IID_WATER_SPURT, 1.0, 1)
 {
     setVisible(true);
     
@@ -180,7 +174,7 @@ void Iceman::doSomething()
                 moveToIfPossible(getX(), getY() - 1);
             break;
         case KEY_PRESS_SPACE:
-            Squirt* squirt = new Squirt(getWorld(), getX(), getY());
+            Squirt* squirt = new Squirt(getWorld(), getX(), getY(), getDirection());
             getWorld()->addActor(squirt);
             squirt->move();
             break;
