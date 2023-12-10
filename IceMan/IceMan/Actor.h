@@ -113,14 +113,16 @@ public:
 //protestor parent class
 class Protester : public Agent
 {
-private:
+protected:
+    enum state { hunting, leaving, resting };
+    state currentState;
+
     bool mustLeaveOilField;
 
     //ticks to determine move()
     int ticksToWaitBetweenMoves;
     int ticksToNextMove;
 
-    //
     int restingTicks;
 
     int goldAmount;
@@ -129,22 +131,36 @@ private:
 
     int numSquaresToMoveInCurrentDirection;
 
-    bool leaveOilField();
-
 public:
     Protester(StudentWorld* world, int startX, int startY, int imageID,
-        unsigned int hitPoints, unsigned int score);
+        unsigned int hitPoints);
     
     virtual void move();
     virtual bool annoy(unsigned int amount);
     virtual void addGold();
     virtual bool huntsIceMan() const;
 
-    // Set state to having gien up protest
+    // Set state to having given up protest
     void setMustLeaveOilField();
 
     // Set number of ticks until next move
     void setTicksToNextMove();
+
+    // Set numSquaresInCurrentDirection
+    void resetNumSquares();
+
+    // Set state
+    void setState(state newState);
+
+    // Get state
+    state getState() const;
+
+    // Check if there is ice at coordinates
+    bool isThereIceAt(int x, int y, Direction dir);
+
+    // Check to see if motion is possible, and move if possible
+    bool checkMotion();
+
 };
 
 
