@@ -67,7 +67,6 @@ int StudentWorld::move()
     for (auto& actor : actors) {
         if (actor->Alive()) {
             //myIceman->doSomething();
-//            actor->doSomething();
             actor->move();
             if (!myIceman->Alive()) {
 
@@ -92,7 +91,9 @@ int StudentWorld::move()
     }
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
-        Protester* p = new Protester(this, 40, 60, IID_PROTESTER, 5, 0);
+
+        RegularProtester* p = new RegularProtester(this, 60, 60, IID_PROTESTER);
+
         addActor(p);
     }
 
@@ -158,17 +159,16 @@ bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const {
     bool ret = true;
     for (auto& currentActor : actors) {
         if (currentActor->canActorsPassThroughMe() == false) {
-            // left and lower bounds are ON the actor, right and upper bounds are ONE SQUARE past the actor
-            int leftBound = currentActor->getX();
-            int rightBound = currentActor->getX() + currentActor->getSize() * 4;
-            int lowerBound = currentActor->getY();
-            int upperBound = currentActor->getY() + currentActor->getSize() * 4;
-
-            // check to see if new coordinates are within the range of the immovable actor
-            if (x >= leftBound && x < rightBound || y >= lowerBound && y < upperBound) {
-                ret = false;
-            }
             
+            // Check if the entities are touching in the x-axis
+            bool xTouching = (currentActor->getX() <= x + 3) && (x <= currentActor->getX() + 3);
+
+            // Check if the entities are touching in the y-axis
+            bool yTouching = (currentActor->getY() <= y + 3) && (y <= currentActor->getY() + 3);
+
+            // If both x and y touching, then the entities are touching
+            return !(xTouching && yTouching);
+
         }
     }
     return ret;
@@ -261,67 +261,65 @@ bool StudentWorld::facingTowardIceMan(Actor* a) const {
 // If the Actor a has a clear line of sight to the IceMan, return
 // the direction to the IceMan, otherwise GraphObject::none.
 GraphObject::Direction StudentWorld::lineOfSightToIceMan(Actor* a) const {
-    GraphObject::Direction dir = GraphObject::Direction::none;
-    if (facingTowardIceMan(a)) {
-        int x = a->getX();
-        int y = a->getY();
+    GraphObject::Direction dir = GraphObject::Direction::none;    
+    int objX = a->getX();
+    int objY = a->getY();
 
+    int icemanX = myIceman->getX();
+    int icemanY = myIceman->getY();
         
+    // iceman to the right of object
+    if (objX < icemanX && icemanY <= objY + 2 && icemanY >= objY - 1) {
+        bool isClear = true;
+        for (int x = objX; x < icemanX; x++) {
+            for (int y = objY - 1; y <= objY + 2 ; y++) {
+                if (hasIceAt(x, y)) {
+                    isClear = false;
+                }
+            }
+        }
+        if (isClear) {
+            return GraphObject::Direction::right;
+        }
     }
+    // iceman to the left of object
+    else if (objX > icemanX && icemanY <= objY + 2 && icemanY >= objY - 1) {
+        bool isClear = true;
+        for (int x = objX; x > icemanX; x--) {
+            for (int y = objY - 1; y <= objY + 2; y++) {
+                if (hasIceAt(x, y)) {
+                    isClear = false;
+                }
+            }
+        }
+        if (isClear) {
+            return GraphObject::Direction::left;
+        }
+    }
+    else if (a->getDirection() == GraphObject::Direction::up) {
+
+    }
+    else if (a->getDirection() == GraphObject::Direction::down) {
+
+    }
+        
 
     return dir;
 }
 
 // Return whether the Actor a is within radius of IceMan. (Set radius to 3 when calling)
 bool StudentWorld::isNearIceMan(Actor* a, int radius) const {
-    // Retrieve Iceman's range with radius
-    int icemanX = myIceman->getX();
-    int icemanY = myIceman->getY();
 
-    // Set Iceman's bounds
-    int iceLeftSide = icemanX - radius + 1;
-    int iceRightSide = icemanX + radius;
-    int iceBottomSide = icemanY - radius + 1;
-    int iceTopSide = icemanX + radius;
+   
+    // Check if the entities are touching in the x-axis
+    bool xTouching = (myIceman->getX() <= a->getX() + radius) && (a->getX() <= myIceman->getX() + radius);
 
+    // Check if the entities are touching in the y-axis
+    bool yTouching = (myIceman->getY() <= a->getY() + radius) && (a->getY() <= myIceman->getY() + radius);
 
-    // Get Actor's outer coordinates
-    int leftbound = a->getX() - 1;
-    int rightbound = a->getX() + 2;
-    int lowerbound = a->getY() - 1;
-    int upperbound = a->getY() + 2;
+    // If both x and y touching, then the entities are touching
+    return (xTouching && yTouching);
 
-    bool ret = false;
-
-    // Check if (radius) units around iceman are in object bounds
-
-    //check if left side of Iceman collides with object
-    if ((iceLeftSide <= rightbound && !(iceLeftSide <= leftbound - 4)) &&
-            ((icemanY - radius + 1 <= upperbound && icemanY + radius >= upperbound) ||
-                (icemanY - radius + 1 <= lowerbound && icemanY + radius >= lowerbound))) {
-        ret = true;
-    }
-    //check if right side collies with object
-    else if ((icemanX + radius >= leftbound && !(iceRightSide >= rightbound + 4)) &&
-        ((icemanY - radius + 1 <= upperbound && icemanY + radius >= upperbound) ||
-            (icemanY - radius + 1 <= lowerbound && icemanY + radius >= lowerbound))) {
-        ret = true;
-    }
-    //check if bottom collides with object
-    else if ((icemanY - radius + 1 >= upperbound) &&
-        ((icemanX - radius + 1 <= rightbound && icemanX + radius >= rightbound) ||
-            (icemanX - radius + 1 <= leftbound && icemanX + radius >= leftbound))) {
-        ret = true;
-    }
-    //check if top collides with object
-    else if( (icemanY + radius >= lowerbound) &&
-            ((icemanX - radius + 1 <= rightbound && icemanX + radius >= rightbound) ||
-                (icemanX - radius + 1 <= leftbound && icemanX + radius >= leftbound))) {
-        ret = true;
-    }
-
-    
-    return ret;
 }
 
 // Determine the direction of the first move a quitting protester
@@ -344,7 +342,8 @@ std::string StudentWorld::getDisplayText() const {
     //int gold = static_cast<int>()
     int score = static_cast<int>(getScore());
     
-    string ret = "Lvl: " + std::to_string(level)
+
+    string ret = "Lvl: " + std::to_string(level) 
         + " Lives: " + to_string(lives) + " Health : " + to_string(health) + "% Wtr : "
         + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : " + to_string(score);
 
@@ -359,4 +358,6 @@ bool StudentWorld::hasIceAt(int x, int y) const {
 
     // Check if there is ice at the specified location
     return oilField[x][y] != nullptr;
+
 }
+
