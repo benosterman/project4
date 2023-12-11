@@ -2,6 +2,7 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
+#include <set>
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class StudentWorld;
@@ -64,9 +65,9 @@ protected:
     unsigned int health;
 public:
 
-    Agent(StudentWorld* world, int startX, int startY, Direction startDir, 
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir,
         int imageID, unsigned int hitPoints);
-   
+
     // Pick up a gold nugget.
     virtual void addGold() = 0;
 
@@ -83,7 +84,7 @@ public:
 class Iceman : public Agent
 {
 private:
-
+    unsigned int water = 5;
 public:
     Iceman(StudentWorld* world, int startX, int startY);
     void doSomething();
@@ -107,6 +108,10 @@ public:
 
     // Get amount of water
     unsigned int getWater() const;
+
+    bool isThereIceInSquare(int x, int y);
+
+    bool createSquirtIfPossible();
 };
 
 
@@ -115,27 +120,21 @@ class Protester : public Agent
 {
 
 protected:
-    enum state { hunting, leaving, resting };
+    enum state { hunting, leaving, stunned };
     state currentState;
-
     bool mustLeaveOilField;
-
-    //ticks to determine move()
     int ticksToWaitBetweenMoves;
     int ticksToNextMove;
-
-    int restingTicks;
-
+    int restCounter;
+    int ticksRestedFor;
     int goldAmount;
-
-    int timeSinceLastTurn;
-
+    int turnTimer;
     int numSquaresToMoveInCurrentDirection;
 
 public:
     Protester(StudentWorld* world, int startX, int startY, int imageID,
         unsigned int hitPoints);
-    
+
     virtual void move();
     virtual bool annoy(unsigned int amount);
     virtual void addGold();
@@ -161,7 +160,12 @@ public:
     bool isThereIceAt(int x, int y, Direction dir);
 
     // Check to see if motion is possible, and move if possible
-    bool checkMotion();
+    bool moveIfPossible();
+
+    // find a new direction for the protester
+    Direction findNewDirection(std::set<int> mySet);
+
+    std::set<int> isPerpendicular();
 
 };
 
@@ -215,6 +219,9 @@ public:
 
 class Squirt : public Actor
 {
+private:
+    int travelDistance;
+    int initial;
 public:
     Squirt(StudentWorld* world, int startX, int startY, Direction startDir);
     virtual void move();
@@ -222,6 +229,11 @@ public:
 
 class ActivatingObject : public Actor
 {
+private:
+    int sound;
+    bool onPlayer;
+    bool onProtester;
+    int lifespan = -1;
 public:
     ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
         int soundToPlay, bool activateOnPlayer,
@@ -229,7 +241,7 @@ public:
     virtual void move();
 
     // Set number of ticks until this object dies
-    void setTicksToLive();
+    virtual void setTicksToLive();
 };
 
 class OilBarrel : public ActivatingObject
@@ -256,9 +268,12 @@ public:
 
 class WaterPool : public ActivatingObject
 {
+private:
+    
 public:
     WaterPool(StudentWorld* world, int startX, int startY);
     virtual void move();
+
 };
 
 

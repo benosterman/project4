@@ -16,9 +16,9 @@ class StudentWorld : public GameWorld
 private:
     std::vector<Actor*> actors;
     Iceman* myIceman;
-    static const int maxIceWidth = 63;
-    static const int maxIceHeight = 59;
-    unique_ptr<Ice> oilField[maxIceWidth][maxIceHeight];
+    static const int maxIceWidth = 64;
+    static const int maxIceHeight = 60;
+    Ice* oilField[64][64];
 
     unsigned int numTicks;
     int ticksBeforeProtester;
@@ -65,7 +65,7 @@ public:
 
     // Give IceMan some water.
     void giveIceManWater();
-    
+
     // Is the Actor a facing toward the IceMan?
     bool facingTowardIceMan(Actor* a) const;
 
@@ -88,6 +88,11 @@ public:
     std::string getDisplayText() const;
 
     bool hasIceAt(int x, int y) const;
+
+    GraphObject::Direction backtraceShortestPath(int start_x, int start_y, int visited[64][64]);
+
+    bool isThereIceInSquare(int x, int y);
+
 };
 
 #endif // STUDENTWORLD_H_
