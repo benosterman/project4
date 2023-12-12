@@ -246,6 +246,8 @@ public:
 
 class OilBarrel : public ActivatingObject
 {
+private:
+    bool pickedUp = false;
 public:
     OilBarrel(StudentWorld* world, int startX, int startY);
     virtual void move();

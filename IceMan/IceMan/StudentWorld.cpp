@@ -58,6 +58,9 @@ int StudentWorld::init()
     //create Gold
 
     //create Oil Barrels
+    OilBarrel* barrel = new OilBarrel(this, 15, 38);
+    barrel->move();
+    addActor(barrel);
 
     //set protester numbers
     ticksBeforeProtester = std::max(25, 0);

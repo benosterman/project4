@@ -895,7 +895,37 @@ void ActivatingObject::setTicksToLive() {
     lifespan = max(100, 300 - 10 * static_cast<int>(getWorld()->getLevel()));
 }
 
+OilBarrel::OilBarrel(StudentWorld* world, int startX, int startY) : ActivatingObject(world, startX, startY, IID_BARREL, SOUND_FOUND_OIL, true, true, false)
+{
+    setVisible(false);
+    
+}
 
+void OilBarrel::move()
+{
+    if(!Alive())
+    {
+        return;
+    }
+    else if (!isVisible()) {
+        if (getWorld()->isNearIceMan(this, 4.0)) {
+            setVisible(true);
+            return;
+        }
+    }
+    else if (getWorld()->isNearIceMan(this, 3)) {
+        setDead();
+        getWorld()->playSound(SOUND_FOUND_OIL);
+        getWorld()->increaseScore(1000);
+        pickedUp = true;
+        
+    }
+}
+
+bool OilBarrel::needsToBePickedUpToFinishLevel() const
+{
+    return pickedUp;
+}
 
 
 
