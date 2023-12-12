@@ -233,6 +233,7 @@ private:
     int sound;
     bool onPlayer;
     bool onProtester;
+protected:
     int lifespan = -1;
 public:
     ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
@@ -242,6 +243,7 @@ public:
 
     // Set number of ticks until this object dies
     virtual void setTicksToLive();
+
 };
 
 class OilBarrel : public ActivatingObject
@@ -271,7 +273,6 @@ public:
 class WaterPool : public ActivatingObject
 {
 private:
-    
 public:
     WaterPool(StudentWorld* world, int startX, int startY);
     virtual void move();

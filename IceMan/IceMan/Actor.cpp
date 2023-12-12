@@ -236,7 +236,7 @@ void Iceman::doSomething()
                 getWorld()->playSound(SOUND_PLAYER_SQUIRT);
             }
             break;
-        case 'x':
+        case 'z':
             addWater();
             break;
         }
@@ -428,7 +428,7 @@ bool Protester::annoy(unsigned int amount) {
         getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
         setVisible(false);
         setDead();
-        //setState(leaving);
+        setState(leaving);
         return true;
     }
 }
@@ -479,7 +479,7 @@ Protester::state Protester::getState() const {
     return currentState;
 }
 
-// Check if there is ice at coordinates
+// Check if there is ice at coordinates in front
 bool Protester::isThereIceAt(int x, int y, Direction dir) {
     if (dir == right) {
         if (getWorld()->hasIceAt(x + 3, y) ||
@@ -518,13 +518,52 @@ bool Protester::isThereIceAt(int x, int y, Direction dir) {
 
 // Check to see if motion is possible, and move if possible
 bool Protester::moveIfPossible() {
+
+    
+    // take a step in direction it is facing if not blocked by boulder or ice or out of bounds
+    if (getDirection() == right) {
+        if (getWorld()->canActorMoveTo(this, getX() + 1, getY()) && !isThereIceAt(getX(), getY(), right)) {
+            moveTo(getX() + 1, getY());
+            return true;
+        }
+        
+    }
+    else if (getDirection() == left) {
+        if (getWorld()->canActorMoveTo(this, getX() - 1, getY()) && !isThereIceAt(getX(), getY(), left)) {
+            moveTo(getX() - 1, getY());
+            return true;
+        }
+    }
+    else if (getDirection() == up) {
+        if (getWorld()->canActorMoveTo(this, getX(), getY() + 1) && !isThereIceAt(getX(), getY(), up)) {
+            moveTo(getX(), getY() + 1);
+            return true;
+        }
+    }
+    else if (getDirection() == down) {
+        if (getWorld()->canActorMoveTo(this, getX(), getY() - 1) && !isThereIceAt(getX(), getY(), down)) {
+            moveTo(getX(), getY() - 1);
+            return true;
+        }
+    }
+    return false;
+
+    /*
+    cout << "back gere" << endl;
+
+
     // Check if there is NO ice in pathway
-    if (!isThereIceAt(getX(), getY(), getDirection())) {
+    //if (!isThereIceAt(getX(), getY(), getDirection())) {
+        cout << "in gere" << endl;
 
         // take a step in direction it is facing if not blocked by boulder
         if (getDirection() == right) {
             if (moveToIfPossible(getX() + 1, getY())) {
+                cout << "here x: " << getX() << " y: " << getY() << endl;
                 return true;
+            }
+            else {
+                //cout << "here" << endl;
             }
         }
         else if (getDirection() == left) {
@@ -542,8 +581,10 @@ bool Protester::moveIfPossible() {
                 return true;
             }
         }
-    }
+    //}
+    cout << "seriousky?" << endl;
     return false;
+    */
 }
 
 GraphObject::Direction Protester::findNewDirection(std::set<int> mySet) {
@@ -600,14 +641,14 @@ GraphObject::Direction Protester::findNewDirection(std::set<int> mySet) {
 
     return ret;
 }
-//x >= 1 && x < 61 && y >= 1 && y <= 60
+
 set<int> Protester::isPerpendicular() {
     StudentWorld* world = getWorld();
     set<int> notPerpendicular = {};
 
     // if current direction is up or down
     if (getDirection() - 2 <= 0) {
-        if (!isThereIceAt(getX(), getY(), right) && getX() + 1 <= 60) {
+        if (!isThereIceAt(getX(), getY(), right) && getX() + 1 <= 61) {
             notPerpendicular.insert(up);
             notPerpendicular.insert(down);
             return notPerpendicular;
@@ -622,7 +663,7 @@ set<int> Protester::isPerpendicular() {
     }
     // if current direction is left or right
     else {
-        if (!isThereIceAt(getX(), getY(), up) && getY() + 1 <= 62) {
+        if (!isThereIceAt(getX(), getY(), up) && getY() + 1 <= 61) {
             notPerpendicular.insert(left);
             notPerpendicular.insert(right);
             return notPerpendicular;
@@ -670,6 +711,7 @@ void RegularProtester::move() {
 
         //STEP #3
         case leaving:
+            /*
             if (ticksToNextMove > 0) {
                 // decrement
                 setTicksToNextMove();
@@ -687,8 +729,9 @@ void RegularProtester::move() {
                 }
             }
             // leave oil field
-            
+            */
             break;
+
         case hunting:
             if (ticksToNextMove != 0) {
                 //decrement Ticks To Next Move
@@ -724,8 +767,8 @@ void RegularProtester::move() {
                 // STEP #6.5 check if squares to move is zero
                 if (numSquaresToMoveInCurrentDirection <= 0) {
                     // If zero, find a new direction and reset squares to move
-                    //cout << "in here?" << endl;
-                    setDirection(findNewDirection(set<int>{getDirection()}));
+                    std::set<int> yay{getDirection()};
+                    setDirection(findNewDirection(yay));
                     resetNumSquares();
                 }
                 // STEP #7 Check if the Regular Protester is at an intersection 
@@ -812,7 +855,7 @@ bool Boulder::isNearProtestor()
 
 void Boulder::annoyActors()
 {
-    getWorld()->annoyAllNearbyActors(this, 100, 1);
+    getWorld()->annoyAllNearbyActors(this, 100, 3);
 }
 
 bool Boulder::canActorsPassThroughMe() const {
@@ -846,19 +889,12 @@ void Boulder::move()
             }
             break;
         case falling:
+            getWorld()->annoyAllNearbyActors(this, 100, 3);
             if (!isIceBelow())
             {
 
                 moveTo(getX(), getY() - 1);
-                if (isNearIceman() && getWorld()->facingTowardIceMan(this)) {
-                    getWorld()->annoyIceMan(100);
-                }
-                /*
-                if (isNearProtestor() || isNearIceman())
-                {
-                    annoyActors();
-
-                }*/
+                
             }
             else {
                 currentState = dead;
@@ -882,7 +918,7 @@ void Boulder::move()
 
 ActivatingObject::ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
     int soundToPlay, bool activateOnPlayer, bool activateOnProtester, bool initallyActive) 
-    : Actor(world, startX, startY, right, true, 0, 1, 2) 
+    : Actor(world, startX, startY, right, true, imageID, 1, 2) 
 {
     
 }
@@ -895,37 +931,8 @@ void ActivatingObject::setTicksToLive() {
     lifespan = max(100, 300 - 10 * static_cast<int>(getWorld()->getLevel()));
 }
 
-OilBarrel::OilBarrel(StudentWorld* world, int startX, int startY) : ActivatingObject(world, startX, startY, IID_BARREL, SOUND_FOUND_OIL, true, true, false)
-{
-    setVisible(false);
-    
-}
 
-void OilBarrel::move()
-{
-    if(!Alive())
-    {
-        return;
-    }
-    else if (!isVisible()) {
-        if (getWorld()->isNearIceMan(this, 4.0)) {
-            setVisible(true);
-            return;
-        }
-    }
-    else if (getWorld()->isNearIceMan(this, 3)) {
-        setDead();
-        getWorld()->playSound(SOUND_FOUND_OIL);
-        getWorld()->increaseScore(1000);
-        pickedUp = true;
-        
-    }
-}
 
-bool OilBarrel::needsToBePickedUpToFinishLevel() const
-{
-    return pickedUp;
-}
 
 
 
@@ -935,13 +942,63 @@ bool OilBarrel::needsToBePickedUpToFinishLevel() const
 WaterPool::WaterPool(StudentWorld* world, int startX, int startY) 
     : ActivatingObject(world, startX, startY, IID_WATER_POOL, SOUND_GOT_GOODIE, true, false, true)
 {
-
+    setVisible(true);
+    setTicksToLive();
 }
 void WaterPool::move() {
     if (Alive()) {
+        if (lifespan <= 0) {
+            setVisible(false);
+            setDead();
+            return;
+        }
         if (getWorld()->isNearIceMan(this, 3)) {
+            getWorld()->giveIceManWater();
             setVisible(false);
             setDead();
         }
     }
 }
+// Water Pool End
+
+
+
+
+
+
+
+
+// Oil Barrel
+OilBarrel::OilBarrel(StudentWorld* world, int startX, int startY) : ActivatingObject(world, startX, startY, IID_BARREL, SOUND_FOUND_OIL, true, true, false)
+{
+    setVisible(false);
+
+}
+
+void OilBarrel::move()
+{
+    if (!Alive())
+    {
+        return;
+    }
+    else if (!isVisible()) {
+        if (getWorld()->isNearIceMan(this, 4.0)) {
+            setVisible(true);
+            return;
+        }
+    }
+    else if (getWorld()->isNearIceMan(this, 3) && !pickedUp) {
+        setVisible(false);
+        setDead();
+        getWorld()->playSound(SOUND_FOUND_OIL);
+        getWorld()->increaseScore(1000);
+        pickedUp = true;
+
+    }
+}
+
+bool OilBarrel::needsToBePickedUpToFinishLevel() const
+{
+    return pickedUp;
+}
+// Oil Barrel End

@@ -4,6 +4,8 @@
 #include <queue>
 #include <utility>
 #include <iostream>
+#include <random>
+#include <exception>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -57,10 +59,12 @@ int StudentWorld::init()
 
     //create Gold
 
+
     //create Oil Barrels
-    OilBarrel* barrel = new OilBarrel(this, 15, 38);
+    OilBarrel* barrel = new OilBarrel(this, 45, 38);
     barrel->move();
     addActor(barrel);
+
 
     //set protester numbers
     ticksBeforeProtester = std::max(25, 0);
@@ -78,7 +82,37 @@ int StudentWorld::init()
 int StudentWorld::move()
 {
     numTicks++;
-    for (auto& actor : actors) {
+    
+    // create sonar or water pool
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    const int totalOutcomes = static_cast<int>(getLevel()) * 25 + 300;
+
+    std::uniform_int_distribution<> G(1, totalOutcomes);
+    int randomNumber = G(gen);
+
+    if (randomNumber == 1) {
+        std::uniform_int_distribution<> N(1, 5);
+        int chance = N(gen);
+        if (chance != 1) {
+            // water pool 
+            int findX = 31;
+            int findY = 61;
+            std::uniform_int_distribution<> Y(7, 61);
+            findY = Y(gen);
+            WaterPool* water = new WaterPool(this, findX, findY);
+            addActor(water);
+        }
+        else {
+            // sonar
+
+        }
+    }
+    
+
+    // call move on everything
+    for (int i = 0; i < actors.size(); i++) {
+        Actor* actor = actors[i];
         if (actor->Alive()) {
             //myIceman->doSomething();
             actor->move();
@@ -89,7 +123,10 @@ int StudentWorld::move()
             }
         }
         else {
-            actor->moveTo(-10, -10);
+            actors.erase(actors.begin() + i);
+            i--;
+            inactive.push(actor);
+            //actor->moveTo(-10, -10);
         }
     }
 
@@ -106,6 +143,7 @@ int StudentWorld::move()
         decLives();
         return GWSTATUS_PLAYER_DIED;
     }
+
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
 
@@ -116,10 +154,20 @@ int StudentWorld::move()
 
     setGameStatText(getDisplayText());
 
+    while (!inactive.empty()) {
+        delete inactive.front();
+        inactive.pop();
+    }
+
     return GWSTATUS_CONTINUE_GAME;
 }
 
 void StudentWorld::cleanUp() {
+
+    while (!inactive.empty()) {
+        delete inactive.front();
+        inactive.pop();
+    }
 
     while (!actors.empty()) {
         delete actors.back();
@@ -139,8 +187,6 @@ void StudentWorld::cleanUp() {
         }
     }
 
-
-    cout << "cleanup!!!" << endl;
 
 }
 
@@ -174,24 +220,31 @@ void StudentWorld::clearIce(int x, int y) {
 
 // Can actor move to x,y?
 bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const {
-    if (x >= 1 && x < 62 && y >= 1 && y < 62) {
-        for (auto& currentActor : actors) {
-            if (currentActor->canActorsPassThroughMe() == false) {
+    try {
+        if (x >= 1 && x < 62 && y >= 1 && y < 62) {
+            for (auto& currentActor : actors) {
+                if (currentActor->canActorsPassThroughMe() == false) {
 
-                // Check if the entities are touching in the x-axis
-                bool xTouching = (currentActor->getX() <= x + 3) && (x <= currentActor->getX() + 3);
+                    // Check if the entities are touching in the x-axis
+                    bool xTouching = (currentActor->getX() <= x + 3) && (x <= currentActor->getX() + 3);
 
-                // Check if the entities are touching in the y-axis
-                bool yTouching = (currentActor->getY() <= y + 3) && (y <= currentActor->getY() + 3);
+                    // Check if the entities are touching in the y-axis
+                    bool yTouching = (currentActor->getY() <= y + 3) && (y <= currentActor->getY() + 3);
 
-                // If both x and y touching, then the entities are touching
-                return !(xTouching && yTouching);
+                    // If both x and y touching, then the entities are touching
+                    return !(xTouching && yTouching);
 
+                }
             }
         }
+        else {
+            return false;
+        }
+        return true;
     }
-    else {
-        return false;
+    catch (exception e) {
+        cerr << e.what() << endl;
+        throw e;
     }
 }
 
@@ -202,12 +255,7 @@ int StudentWorld::annoyAllNearbyActors(Actor* annoyer, int points, int radius) {
     // Get annoyer's current location
     int objX = annoyer->getX();
     int objY = annoyer->getY();
-    /*
-    // Check if X position is between (radius) units to the right and left of Iceman
-    if (objX < icemanX + 4 * radius && icemanX - 3 * radius <= objX && objY < icemanY + 4 * radius && icemanY - radius * 3 <= objY) {
-        annoyIceMan(points);
-    }
-    */
+  
     int ret = 0;
     for (auto& currentActor : actors) {
 
@@ -220,9 +268,8 @@ int StudentWorld::annoyAllNearbyActors(Actor* annoyer, int points, int radius) {
             // If both x and y touching, then the entities are touching
             if (xTouching && yTouching) {
                 ret++;
-                currentActor->annoy(2);
+                currentActor->annoy(static_cast<unsigned int>(points));
             }
-
         
     }
 
@@ -264,7 +311,7 @@ void StudentWorld::giveIceManSonar() {
 
 // Give IceMan some water.
 void StudentWorld::giveIceManWater() {
-
+    myIceman->addWater();
 }
 
 // Is the Actor a facing toward the IceMan?
@@ -402,7 +449,7 @@ GraphObject::Direction StudentWorld::determineFirstMoveToIceMan(int x, int y) {
 
 bool StudentWorld::hasIceAt(int x, int y) const {
     // Check if the coordinates are within the bounds of the oil field
-    if (x < 0 || x > 64 || y < 0 || y > 62) {
+    if (x < 0 || x > 64 || y < 0 || y > 64) {
         return false;
     }
 
@@ -430,7 +477,7 @@ std::string StudentWorld::getDisplayText() const {
 
 // closest so far
 GraphObject::Direction StudentWorld::determineFirstMoveToExit(int start_x, int start_y) {
-    cout << "Starting at (" << start_x << ", " << start_y << ")" << endl;
+   /* cout << "Starting at (" << start_x << ", " << start_y << ")" << endl;
     cout << "index: [" << start_y - 1 << "][" << start_x - 1 << "]" << endl;
     
     std::queue<std::pair<Ice*, int>> q;  // Pair: Ice pointer and iteration
@@ -528,16 +575,17 @@ GraphObject::Direction StudentWorld::determineFirstMoveToExit(int start_x, int s
 
         
         
-        //*/
+        //
         cout << endl;
-    }
+    }*/
     return GraphObject::Direction::none; // No valid path to an exit found
 }
 
 
 GraphObject::Direction StudentWorld::backtraceShortestPath(int origin_x, int origin_y, int visited[64][64]) {
+    /*
     cout << "made it to backtrace" << endl;
-
+     
     cout << "origin index x: " << origin_y << "  y: " << origin_x << endl;
     // Start at the exit (index)
     int current_x = 60; // exit x
@@ -585,7 +633,8 @@ GraphObject::Direction StudentWorld::backtraceShortestPath(int origin_x, int ori
             ? visited[current_y][current_x + 1] : 70;
         */
 
-
+    /*
+    //working
         int up = (current_y + 1 < 64 && visited[current_y + 1][current_x] > 0)
             ? visited[current_y + 1][current_x] : 70;
         int down = (current_y - 1 > 0 && visited[current_y - 1][current_x] > 0)
@@ -681,7 +730,6 @@ GraphObject::Direction StudentWorld::backtraceShortestPath(int origin_x, int ori
 
     return GraphObject::Direction::none;  // Should not reach here
 }
-
 
 
 bool StudentWorld::isThereIceInSquare(int x, int y) {

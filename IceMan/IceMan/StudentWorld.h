@@ -6,6 +6,7 @@
 #include "Actor.h"
 #include <vector>
 #include <string>
+#include <queue>
 using namespace std;
 
 
@@ -19,6 +20,7 @@ private:
     static const int maxIceWidth = 64;
     static const int maxIceHeight = 60;
     Ice* oilField[64][64];
+    queue<Actor*> inactive;
 
     unsigned int numTicks;
     int ticksBeforeProtester;
