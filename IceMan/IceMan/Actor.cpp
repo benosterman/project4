@@ -933,6 +933,39 @@ void ActivatingObject::setTicksToLive() {
 
 
 
+GoldNugget::GoldNugget(StudentWorld* world, int startX, int startY, bool temporary) : ActivatingObject(world, startX, startY, IID_GOLD, SOUND_GOT_GOODIE, true, true, false)
+{
+    setVisible(!temporary);
+    
+    
+}
+
+void GoldNugget::move()
+{
+    if(!Alive())
+    {
+        return;
+    }
+    else if (!isVisible()) {
+        if (getWorld()->isNearIceMan(this, 4.0)) {
+            setVisible(true);
+            return;
+        }
+    }
+    else if (getWorld()->isNearIceMan(this, 3)) {
+        setDead();
+        getWorld()->playSound(SOUND_GOT_GOODIE);
+        getWorld()->increaseScore(10);
+    }
+    Protester* protester = dynamic_cast<Protester*>(getWorld()->findNearbyPickerUpper(this, 3));
+    if (!canPickThingsUp() && protester != nullptr){
+        setDead();
+        getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+        getWorld()->increaseScore(25);
+        
+    }
+    
+}
 
 
 
