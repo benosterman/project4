@@ -959,8 +959,9 @@ void GoldNugget::move()
     }
     
     else if (!canPickThingsUp()){
-        Protester* protester = dynamic_cast<Protester*>(getWorld()->findNearbyPickerUpper(this, 3));
-        if (protester == nullptr) {
+        Actor* actor = getWorld()->findNearbyPickerUpper(this, 3);
+
+        if (actor == nullptr) {
             setDead();
             getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
             getWorld()->increaseScore(25);
