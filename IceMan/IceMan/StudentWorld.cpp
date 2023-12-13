@@ -58,7 +58,9 @@ int StudentWorld::init()
     addActor(boulder);
 
     //create Gold
-
+    GoldNugget* gold = new GoldNugget(this, 15, 33, true);
+    gold->move();
+    addActor(gold);
 
     //create Oil Barrels
     OilBarrel* barrel = new OilBarrel(this, 45, 38);
