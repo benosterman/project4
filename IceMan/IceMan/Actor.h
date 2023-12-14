@@ -50,6 +50,8 @@ public:
     // Can this actor need to be picked up to finish the level?
     virtual bool needsToBePickedUpToFinishLevel() const;
 
+    virtual bool isGoodie() const;
+
     // Move this actor to x,y if possible, and return true; otherwise,
     // return false without moving.
     bool moveToIfPossible(int x, int y);
@@ -84,7 +86,10 @@ public:
 class Iceman : public Agent
 {
 private:
+    unsigned int sonar = 1;
     unsigned int water = 5;
+    unsigned int gold = 0;
+    int oil = 0;
 public:
     Iceman(StudentWorld* world, int startX, int startY);
     void doSomething();
@@ -112,6 +117,7 @@ public:
     bool isThereIceInSquare(int x, int y);
 
     bool createSquirtIfPossible();
+
 };
 
 
@@ -120,8 +126,8 @@ class Protester : public Agent
 {
 
 protected:
-    enum state { hunting, leaving, stunned };
-    state currentState;
+    
+    
     bool mustLeaveOilField;
     int ticksToWaitBetweenMoves;
     int ticksToNextMove;
@@ -132,6 +138,8 @@ protected:
     int numSquaresToMoveInCurrentDirection;
 
 public:
+    enum state { hunting, leaving, stunned };
+
     Protester(StudentWorld* world, int startX, int startY, int imageID,
         unsigned int hitPoints);
 
@@ -167,6 +175,8 @@ public:
 
     std::set<int> isPerpendicular();
 
+protected:
+    state currentState;
 };
 
 
@@ -244,6 +254,7 @@ public:
     // Set number of ticks until this object dies
     virtual void setTicksToLive();
 
+    virtual bool isGoodie() const;
 };
 
 class OilBarrel : public ActivatingObject
@@ -258,9 +269,12 @@ public:
 
 class GoldNugget : public ActivatingObject
 {
+private:
+    bool dropped = false;
 public:
     GoldNugget(StudentWorld* world, int startX, int startY, bool temporary);
     virtual void move();
+    bool isDropped() const;
 };
 
 class SonarKit : public ActivatingObject

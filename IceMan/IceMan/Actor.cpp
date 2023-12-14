@@ -64,17 +64,20 @@ bool Actor::needsToBePickedUpToFinishLevel() const {
 // return false without moving.
 bool Actor::moveToIfPossible(int x, int y) {
 
-    
+
     if (getWorld()->canActorMoveTo(this, x, y)) {
         this->moveTo(x, y);
         return true;
     }
-    
+
 
     return false;
 }
 // Actor Class End
 
+bool Actor::isGoodie() const {
+    return false;
+}
 
 
 
@@ -132,7 +135,7 @@ bool Agent::canPickThingsUp() const {
 
 
 //Squirt Class
-Squirt::Squirt(StudentWorld* world, int startX, int startY, Direction dir) : 
+Squirt::Squirt(StudentWorld* world, int startX, int startY, Direction dir) :
     Actor(world, startX, startY, dir, true, IID_WATER_SPURT, 1.0, 1)
 {
     setVisible(true);
@@ -142,7 +145,7 @@ Squirt::Squirt(StudentWorld* world, int startX, int startY, Direction dir) :
 
 void Squirt::move()
 {
-    if (getWorld()->annoyAllNearbyActors(this, 2, 3) > 0) {
+    if (getWorld()->annoyAllNearbyActors(this, 2, 3) > 1) {
         setVisible(false);
         setDead();
     }
@@ -237,7 +240,17 @@ void Iceman::doSomething()
             }
             break;
         case 'z':
-            addWater();
+            if (static_cast<int>(sonar) > 0) {
+                getWorld()->revealAllNearbyObjects(getX(), getY(), 12);
+                getWorld()->playSound(SOUND_SONAR);
+                sonar--;
+            }
+            break;
+        case KEY_PRESS_TAB:
+            if (static_cast<int>(gold) >= 1) {
+                gold--;
+                getWorld()->addActor(new GoldNugget(getWorld(), getX(), getY(), true));
+            }
             break;
         }
     }
@@ -250,7 +263,7 @@ void Iceman::move() {
 // Check health of Iceman
 bool Iceman::annoy(unsigned int amount) {
     health -= amount;
-    
+
     if (static_cast<int>(health) > 0) {
         getWorld()->playSound(SOUND_PLAYER_ANNOYED);
         return false;
@@ -262,7 +275,7 @@ bool Iceman::annoy(unsigned int amount) {
 }
 
 void Iceman::addGold() {
-
+    gold += 1;
 }
 
 bool Iceman::canDigThroughIce() const {
@@ -271,22 +284,24 @@ bool Iceman::canDigThroughIce() const {
 
 // Pick up a sonar kit.
 void Iceman::addSonar() {
-
+    sonar++;
+    getWorld()->increaseScore(75);
 }
 
 // Pick up water.
 void Iceman::addWater() {
     water += 5;
+    getWorld()->increaseScore(100);
 }
 
 // Get amount of gold
 unsigned int Iceman::getGold() const {
-    return 0;
+    return gold;
 }
 
 // Get amount of sonar charges
 unsigned int Iceman::getSonar() const {
-    return 0;
+    return sonar;
 }
 
 // Get amount of water
@@ -300,7 +315,7 @@ bool Iceman::isThereIceInSquare(int x, int y) {
         for (int c = y - 1; c < y + 3; c++) {
 
             // If in bounds, check if there is ice at coordinates
-            if ( r >= 0 && r <= 63 && c >= 1 && c <= 59) {
+            if (r >= 0 && r <= 63 && c >= 1 && c <= 59) {
                 if (getWorld()->hasIceAt(r, c)) {
                     return true;
                 }
@@ -519,14 +534,14 @@ bool Protester::isThereIceAt(int x, int y, Direction dir) {
 // Check to see if motion is possible, and move if possible
 bool Protester::moveIfPossible() {
 
-    
+
     // take a step in direction it is facing if not blocked by boulder or ice or out of bounds
     if (getDirection() == right) {
         if (getWorld()->canActorMoveTo(this, getX() + 1, getY()) && !isThereIceAt(getX(), getY(), right)) {
             moveTo(getX() + 1, getY());
             return true;
         }
-        
+
     }
     else if (getDirection() == left) {
         if (getWorld()->canActorMoveTo(this, getX() - 1, getY()) && !isThereIceAt(getX(), getY(), left)) {
@@ -591,7 +606,7 @@ GraphObject::Direction Protester::findNewDirection(std::set<int> mySet) {
     std::random_device rd;  // Create a random device to seed the generator
     std::mt19937 gen(rd()); // Create a Mersenne Twister pseudo-random generator
     //cout << "nahhhh" << endl;
-    
+
     // Create a uniform distribution within the specified range
     std::uniform_int_distribution<int> distribution(1, 4);
 
@@ -658,8 +673,8 @@ set<int> Protester::isPerpendicular() {
             notPerpendicular.insert(down);
             return notPerpendicular;
         }
-        
-        
+
+
     }
     // if current direction is left or right
     else {
@@ -674,8 +689,8 @@ set<int> Protester::isPerpendicular() {
             return notPerpendicular;
         }
     }
-    
-    
+
+
     return notPerpendicular;
 }
 // Protester Class End
@@ -699,7 +714,7 @@ void RegularProtester::move() {
     // STEP #1 chek if alive
     if (Alive()) {
         switch (currentState) {
-        //STEP #2
+            //STEP #2
         case stunned:
             if (ticksRestedFor >= restCounter) {
                 currentState = hunting;
@@ -709,7 +724,7 @@ void RegularProtester::move() {
             ticksRestedFor++;
             break;
 
-        //STEP #3
+            //STEP #3
         case leaving:
             /*
             if (ticksToNextMove > 0) {
@@ -730,6 +745,8 @@ void RegularProtester::move() {
             }
             // leave oil field
             */
+            setVisible(false);
+            setDead();
             break;
 
         case hunting:
@@ -752,7 +769,7 @@ void RegularProtester::move() {
                 //cout << "step 5" << endl;
                 Direction icemanDirection = getWorld()->lineOfSightToIceMan(this);
 
-                if ( icemanDirection != 0 ) {
+                if (icemanDirection != 0) {
                     setDirection(icemanDirection);
                     moveIfPossible();
                     ticksToNextMove = ticksToWaitBetweenMoves;
@@ -767,7 +784,7 @@ void RegularProtester::move() {
                 // STEP #6.5 check if squares to move is zero
                 if (numSquaresToMoveInCurrentDirection <= 0) {
                     // If zero, find a new direction and reset squares to move
-                    std::set<int> yay{getDirection()};
+                    std::set<int> yay{ getDirection() };
                     setDirection(findNewDirection(yay));
                     resetNumSquares();
                 }
@@ -785,15 +802,15 @@ void RegularProtester::move() {
                 if (!moveIfPossible()) {
                     numSquaresToMoveInCurrentDirection = 0;
                 }
-                
+
                 //cout << "step 9" << endl;
                 //check to see if it actually turned
-                if ( (getDirection() - 2 <= 0 && tempDirection - 2 >= 1) || 
+                if ((getDirection() - 2 <= 0 && tempDirection - 2 >= 1) ||
                     (getDirection() - 2 >= 1 && tempDirection - 2 <= 0)) {
                     turnTimer = 0;
                     resetNumSquares();
                 }
-                
+
 
                 // Reset ticksToNextMove to default waiting time
                 ticksToNextMove = ticksToWaitBetweenMoves;
@@ -809,6 +826,132 @@ void RegularProtester::addGold() {
     getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
 }
 // Regular Protester End
+
+
+// Hardcore Protester
+HardcoreProtester::HardcoreProtester(StudentWorld* world, int startX, int startY, int imageID) :
+    Protester(world, startX, startY, imageID, 20)
+{
+
+}
+
+void HardcoreProtester::move() {
+    // STEP #1 chek if alive
+    if (Alive()) {
+        switch (currentState) {
+            //STEP #2
+        case stunned:
+            if (ticksRestedFor >= restCounter) {
+                currentState = hunting;
+                ticksRestedFor = 0;
+            }
+            // increment rest counter
+            ticksRestedFor++;
+            break;
+
+            //STEP #3
+        case leaving:
+            /*
+            if (ticksToNextMove > 0) {
+                // decrement
+                setTicksToNextMove();
+            }
+            else {
+                cout << "direction before" << getDirection() << endl;
+                //setDirection(getWorld()->determineFirstMoveToExit(getX(), getY()));
+                cout << "direction after" << getDirection() << endl;
+                moveIfPossible();
+                //moveTo(getX() + 1, getY());
+                ticksToNextMove = ticksToWaitBetweenMoves;
+                if (getX() == 61 && getY() == 61) {
+                    setVisible(false);
+                    setDead();
+                }
+            }
+            // leave oil field
+            */
+            setVisible(false);
+            setDead();
+            break;
+
+        case hunting:
+            if (ticksToNextMove != 0) {
+                //decrement Ticks To Next Move
+                setTicksToNextMove();
+            }
+            else {
+                //cout << "step 4" << endl;
+                Direction tempDirection = getDirection();
+                // STEP #4: Check to see if protester is in shouting range
+                if (getWorld()->isNearIceMan(this, 3) && getWorld()->facingTowardIceMan(this)) {
+                    // Check position and direction of protester, annoy iceman
+                    getWorld()->annoyIceMan(2);
+                    getWorld()->playSound(SOUND_PROTESTER_YELL);
+                    currentState = stunned;
+                    break;
+                }
+                // STEP #5 line of sight to iceman
+                //cout << "step 5" << endl;
+                Direction icemanDirection = getWorld()->lineOfSightToIceMan(this);
+
+                if (icemanDirection != 0) {
+                    setDirection(icemanDirection);
+                    moveIfPossible();
+                    ticksToNextMove = ticksToWaitBetweenMoves;
+                    break;
+                }
+                //cout << "step 6" << endl;
+                // STEP #6 decrement squares to move
+                if (numSquaresToMoveInCurrentDirection > 0) {
+                    numSquaresToMoveInCurrentDirection--;
+                }
+                //cout << "step 6.5" << endl;
+                // STEP #6.5 check if squares to move is zero
+                if (numSquaresToMoveInCurrentDirection <= 0) {
+                    // If zero, find a new direction and reset squares to move
+                    std::set<int> yay{ getDirection() };
+                    setDirection(findNewDirection(yay));
+                    resetNumSquares();
+                }
+                // STEP #7 Check if the Regular Protester is at an intersection 
+                // and hasn't made a perpendicular turn recently
+                else if (turnTimer >= 200) {
+                    //cout << "step 7" << endl;
+                    auto check = isPerpendicular();
+                    if (!check.empty()) {
+                        setDirection(findNewDirection(check));
+                    }
+                }
+                // STEP #8 attempt to move
+                //cout << "step 8" << endl;
+                if (!moveIfPossible()) {
+                    numSquaresToMoveInCurrentDirection = 0;
+                }
+
+                //cout << "step 9" << endl;
+                //check to see if it actually turned
+                if ((getDirection() - 2 <= 0 && tempDirection - 2 >= 1) ||
+                    (getDirection() - 2 >= 1 && tempDirection - 2 <= 0)) {
+                    turnTimer = 0;
+                    resetNumSquares();
+                }
+
+
+                // Reset ticksToNextMove to default waiting time
+                ticksToNextMove = ticksToWaitBetweenMoves;
+                turnTimer++;
+            }
+        }
+    }
+    // If Protestor is not alive, function will return
+}
+
+void HardcoreProtester::addGold() {
+    setState(stunned);
+    getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+}
+// Hardcore Protester End
+
 
 
 
@@ -889,12 +1032,13 @@ void Boulder::move()
             }
             break;
         case falling:
+            getWorld()->resetActorField(getX(), getY());
             getWorld()->annoyAllNearbyActors(this, 100, 3);
             if (!isIceBelow())
             {
 
                 moveTo(getX(), getY() - 1);
-                
+
             }
             else {
                 currentState = dead;
@@ -917,12 +1061,12 @@ void Boulder::move()
 // Activating Object
 
 ActivatingObject::ActivatingObject(StudentWorld* world, int startX, int startY, int imageID,
-    int soundToPlay, bool activateOnPlayer, bool activateOnProtester, bool initallyActive) 
-    : Actor(world, startX, startY, right, true, imageID, 1, 2) 
+    int soundToPlay, bool activateOnPlayer, bool activateOnProtester, bool initallyActive)
+    : Actor(world, startX, startY, right, true, imageID, 1, 2)
 {
-    
+
 }
-void ActivatingObject::move() { 
+void ActivatingObject::move() {
 
 }
 
@@ -931,18 +1075,28 @@ void ActivatingObject::setTicksToLive() {
     lifespan = max(100, 300 - 10 * static_cast<int>(getWorld()->getLevel()));
 }
 
+bool ActivatingObject::isGoodie() const {
+    return true;
+}
 
 
-GoldNugget::GoldNugget(StudentWorld* world, int startX, int startY, bool temporary) : ActivatingObject(world, startX, startY, IID_GOLD, SOUND_GOT_GOODIE, true, true, false)
+
+
+
+
+
+
+// Gold
+GoldNugget::GoldNugget(StudentWorld* world, int startX, int startY, bool temporary) : 
+    ActivatingObject(world, startX, startY, IID_GOLD, SOUND_GOT_GOODIE, true, true, false)
 {
-    setVisible(!temporary);
-    
-    
+    setVisible(temporary);
+    if (temporary) dropped = true;
 }
 
 void GoldNugget::move()
 {
-    if(!Alive())
+    if (!Alive())
     {
         return;
     }
@@ -952,33 +1106,71 @@ void GoldNugget::move()
             return;
         }
     }
-    else if (getWorld()->isNearIceMan(this, 3)) {
+    else if (getWorld()->isNearIceMan(this, 3) && !dropped) {
+        setVisible(false);
         setDead();
         getWorld()->playSound(SOUND_GOT_GOODIE);
         getWorld()->increaseScore(10);
-    }
-    
-    else if (!canPickThingsUp()){
-        Actor* actor = getWorld()->findNearbyPickerUpper(this, 3);
+        getWorld()->giveIceManGold();
 
-        if (actor == nullptr) {
+    }
+    else if (!canPickThingsUp()) {
+        Protester* protester = dynamic_cast<Protester*>(getWorld()->findNearbyPickerUpper(this, 3));
+        if (protester != nullptr) {
             setDead();
-            getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
             getWorld()->increaseScore(25);
-
+            protester->addGold();
         }
-        
-        
     }
-    
+
 }
+
+bool GoldNugget::isDropped() const {
+    if (dropped) return true;
+    else return false;
+}
+// Gold End
+
+
+
+
+
+
+
+
+
+
+// Sonar
+SonarKit::SonarKit(StudentWorld* world, int startX,int startY) : 
+    ActivatingObject(world, startX, startY, IID_SONAR, SOUND_GOT_GOODIE, false, false, false){
+    setVisible(true);
+    setTicksToLive();
+}
+
+void SonarKit::move() {
+    if (Alive()) {
+        if (lifespan <= 0) {
+            setVisible(false);
+            setDead();
+            return;
+        }
+        if (getWorld()->isNearIceMan(this, 3)) {
+            getWorld()->giveIceManSonar();
+            setVisible(false);
+            setDead();
+        }
+    }
+}
+// Sonar End
+
+
 
 
 
 
 
 // Water Pool
-WaterPool::WaterPool(StudentWorld* world, int startX, int startY) 
+WaterPool::WaterPool(StudentWorld* world, int startX, int startY)
     : ActivatingObject(world, startX, startY, IID_WATER_POOL, SOUND_GOT_GOODIE, true, false, true)
 {
     setVisible(true);
@@ -1032,7 +1224,7 @@ void OilBarrel::move()
         getWorld()->playSound(SOUND_FOUND_OIL);
         getWorld()->increaseScore(1000);
         pickedUp = true;
-
+        getWorld()->pickUpOil();
     }
 }
 

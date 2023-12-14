@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 #include <exception>
+#include <iomanip>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -19,6 +20,23 @@ StudentWorld::StudentWorld(std::string assetDir) : GameWorld(assetDir) { }
 
 StudentWorld::~StudentWorld() {
 
+}
+
+bool StudentWorld::canGenerateActor(int x, int y) {
+
+    for (int i = x - 1; i < x + 3; ++i) {
+        for (int j = y - 1; j < y + 3; ++j) {
+            // Check if the coordinates are within the valid range
+            if (i >= 0 && i <= 63 && j >= 0 && j <= 59) {
+                // Check if the value is nonzero
+                if (actorPositions[i][j] != 0) {
+                    return false; 
+                }
+            }
+        }
+    }
+
+    return true; 
 }
 
 int StudentWorld::init()
@@ -36,6 +54,7 @@ int StudentWorld::init()
                 oilField[x][y] = new Ice(this, x + 1, y + 1);
                 oilField[x][y]->setVisible(false);
                 oilField[x][y]->setDead();
+                actorPositions[x][y] = 1;
             }
             else {
                 oilField[x][y] = new Ice(this, x + 1, y + 1);
@@ -48,24 +67,107 @@ int StudentWorld::init()
         for (int y = 4; y < 60; y++) {
             oilField[x][y]->setVisible(false);
             oilField[x][y]->setDead();
+            actorPositions[y][x] = 1;
         }
 
     }
 
-    //create Boulders
-    Boulder* boulder = new Boulder(this, 15, 40);
-    boulder->move();
-    addActor(boulder);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> X(2, 61);
+    std::uniform_int_distribution<> Y(5, 56);
 
+
+    //create Boulders
+    
+    int B = min(static_cast<int>(getLevel()) / 2 + 2, 9);
+    for (int i = 0; i < B; i++) {
+        int testX = X(gen);
+        int testY = Y(gen);
+
+        while (testX > 27 && testX < 34) {
+            testX = X(gen);
+            testY = Y(gen);
+            if (testX > 27 && testX < 34) {
+                continue;
+            }
+            else if(canGenerateActor(testX, testY)){
+                break;
+            }
+        }
+        
+        Boulder* boulder = new Boulder(this, testX, testY);
+        //boulder->move();
+        addActor(boulder);
+        cout << "adding boulder, X: " << testX << " Y: " << testY << endl;
+
+        for (int i = testX - 1; i < testX + 3; ++i) {
+            for (int j = testY - 1; j < testY + 3; ++j) {
+                actorPositions[i][j] = 2;
+            }
+        }
+        
+    }
+    
+    
     //create Gold
-    GoldNugget* gold = new GoldNugget(this, 15, 33, true);
-    gold->move();
-    addActor(gold);
+    int G = max(5 - static_cast<int>(getLevel()) / 2, 2);
+    for (int i = 0; i < G; i++) {
+        int testX = X(gen);
+        int testY = Y(gen);
+
+        while (testX > 27 && testX < 34) {
+            testX = X(gen);
+            testY = Y(gen);
+            if (testX > 27 && testX < 34) {
+                continue;
+            }
+            else if (canGenerateActor(testX, testY)) {
+                break;
+            }
+        }
+
+        GoldNugget* gold = new GoldNugget(this, testX, testY, false);
+        gold->move();
+        addActor(gold);
+
+        for (int i = testX - 1; i < testX + 3; ++i) {
+            for (int j = testY - 1; j < testY + 3; ++j) {
+                actorPositions[i][j] = 1;
+            }
+        }
+    }
+    
+
 
     //create Oil Barrels
-    OilBarrel* barrel = new OilBarrel(this, 45, 38);
-    barrel->move();
-    addActor(barrel);
+    int L = min(2 + static_cast<int>(getLevel()), 21);
+    for (int i = 0; i < L; i++) {
+        int testX = X(gen);
+        int testY = Y(gen);
+
+        while (testX > 27 && testX < 34) {
+            testX = X(gen);
+            testY = Y(gen);
+            if (testX > 27 && testX < 34) {
+                continue;
+            }
+            else if (canGenerateActor(testX, testY)) {
+                break;
+            }
+        }
+
+        OilBarrel* barrel = new OilBarrel(this, testX, testY);
+        barrel->move();
+        addActor(barrel);
+        for (int i = testX - 1; i < testX + 3; ++i) {
+            for (int j = testY - 1; j < testY + 3; ++j) {
+                actorPositions[i][j] = 1;
+            }
+        }
+    }
+    numOil = L;
+    
 
 
     //set protester numbers
@@ -80,9 +182,17 @@ int StudentWorld::init()
     return GWSTATUS_CONTINUE_GAME;
 }
 
+void StudentWorld::resetActorField(int x, int y) {
+    for (int i = x - 1; i < x + 3; ++i) {
+        for (int j = y - 1; j < y + 3; ++j) {
+            actorPositions[i][j] = 0;
+        }
+    }
+}
 
 int StudentWorld::move()
 {
+    // << actors.size() << endl;
     numTicks++;
     
     // create sonar or water pool
@@ -107,7 +217,12 @@ int StudentWorld::move()
         }
         else {
             // sonar
-
+            int findX = 31;
+            int findY = 61;
+            std::uniform_int_distribution<> X(4, 58);
+            findX = X(gen);
+            SonarKit* sonar = new SonarKit(this, findX, findY);
+            addActor(sonar);
         }
     }
     
@@ -128,7 +243,6 @@ int StudentWorld::move()
             actors.erase(actors.begin() + i);
             i--;
             inactive.push(actor);
-            //actor->moveTo(-10, -10);
         }
     }
 
@@ -146,12 +260,27 @@ int StudentWorld::move()
         return GWSTATUS_PLAYER_DIED;
     }
 
+    //check to see if oil was collected
+    if (numOil <= 0) {
+        return GWSTATUS_FINISHED_LEVEL;
+    }
+
     //create new protester
     if (numTicks == ticksBeforeProtester && numProtesters < numTargetProtesters) {
+        int probabilityOfHardcore = std::min(90, static_cast<int>(getLevel()) * 10 + 30);
+        std::uniform_int_distribution<> P(1, probabilityOfHardcore);
+        int protesterChance = P(gen);
 
-        RegularProtester* p = new RegularProtester(this, 61, 61, IID_PROTESTER);
+        if (protesterChance == 1) {
+            HardcoreProtester* p = new HardcoreProtester(this, 61, 61, IID_HARD_CORE_PROTESTER);
+            addActor(p);
+        }
+        else {
+            RegularProtester* p = new RegularProtester(this, 61, 61, IID_PROTESTER);
+            addActor(p);
+        }
+        numProtesters++;
 
-        addActor(p);
     }
 
     setGameStatText(getDisplayText());
@@ -189,7 +318,14 @@ void StudentWorld::cleanUp() {
         }
     }
 
+    //delete char representation
 
+
+}
+
+void StudentWorld::pickUpOil() {
+
+    numOil--;
 }
 
 // Add an actor to the world.
@@ -222,32 +358,21 @@ void StudentWorld::clearIce(int x, int y) {
 
 // Can actor move to x,y?
 bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const {
-    try {
-        if (x >= 1 && x < 62 && y >= 1 && y < 62) {
-            for (auto& currentActor : actors) {
-                if (currentActor->canActorsPassThroughMe() == false) {
-
-                    // Check if the entities are touching in the x-axis
-                    bool xTouching = (currentActor->getX() <= x + 3) && (x <= currentActor->getX() + 3);
-
-                    // Check if the entities are touching in the y-axis
-                    bool yTouching = (currentActor->getY() <= y + 3) && (y <= currentActor->getY() + 3);
-
-                    // If both x and y touching, then the entities are touching
-                    return !(xTouching && yTouching);
-
-                }
+    for (int i = x - 1; i < x + 3; ++i) {
+        for (int j = y - 1; j < y + 3; ++j) {
+            if (actorPositions[i][j] == 2) {
+                return false;
             }
+        }
+    }
+        if (x >= 1 && x < 62 && y >= 1 && y < 62) {
+            return true;
+          
         }
         else {
             return false;
         }
-        return true;
-    }
-    catch (exception e) {
-        cerr << e.what() << endl;
-        throw e;
-    }
+        return false;
 }
 
 // Annoy all other actors within radius of annoyer, returning the
@@ -259,6 +384,22 @@ int StudentWorld::annoyAllNearbyActors(Actor* annoyer, int points, int radius) {
     int objY = annoyer->getY();
   
     int ret = 0;
+    
+    // is touching iceman
+    // Check if the entities are touching in the x-axis
+    bool xTouchingIceman = (myIceman->getX() <= objX + radius) && (objX <= myIceman->getX() + radius);
+
+    // Check if the entities are touching in the y-axis
+    bool yTouchingIceman = (myIceman->getY() <= objY + radius) && (objY <= myIceman->getY() + radius);
+
+    // If both x and y touching, then the entities are touching
+    if (xTouchingIceman && yTouchingIceman) {
+        ret++;
+        annoyIceMan(static_cast<unsigned int>(points));
+    }
+
+
+
     for (auto& currentActor : actors) {
 
             // Check if the entities are touching in the x-axis
@@ -280,7 +421,23 @@ int StudentWorld::annoyAllNearbyActors(Actor* annoyer, int points, int radius) {
 
 // Reveal all objects within radius of x,y.
 void StudentWorld::revealAllNearbyObjects(int x, int y, int radius) {
+    for (auto& actor : actors) {
+        int actX = actor->getX();
+        int actY = actor->getY();
 
+        // Check if the entities are touching in the x-axis
+        bool xTouching = (actX <= x + radius) && (x <= actX + radius);
+
+        // Check if the entities are touching in the y-axis
+        bool yTouching = (actY <= y + radius) && (y <= actY + radius);
+
+        // If both x and y touching, then the entities are touching
+        if (xTouching && yTouching) {
+            if (actor->isGoodie()) {
+                actor->setVisible(true);
+            }
+        }
+    }
 }
 
 // If the IceMan is within radius of a, return a pointer to the
@@ -292,7 +449,27 @@ Actor* StudentWorld::findNearbyIceMan(Actor* a, int radius) const {
 // If at least one actor that can pick things up is within radius of a,
 // return a pointer to one of them, otherwise null.
 Actor* StudentWorld::findNearbyPickerUpper(Actor* a, int radius) const {
-    return a;
+    for (auto& actor : actors) {
+        int x = a->getX();
+        int y = a->getY();
+        int actX = actor->getX();
+        int actY = actor->getY();
+
+        // Check if the entities are touching in the x-axis
+        bool xTouching = (actX <= x + radius) && (x <= actX + radius);
+
+        // Check if the entities are touching in the y-axis
+        bool yTouching = (actY <= y + radius) && (y <= actY + radius);
+
+        // If both x and y touching, then the entities are touching
+        if (xTouching && yTouching) {
+            Protester* p = dynamic_cast<Protester*>(actor);
+            if (p != nullptr) {
+                return p;
+            }
+        }
+    }
+    return nullptr;
 }
 
 // Annoy the IceMan.
@@ -308,13 +485,21 @@ void StudentWorld::annoyIceMan(unsigned int amount) {
 
 // Give IceMan some sonar charges.
 void StudentWorld::giveIceManSonar() {
-
+    myIceman->addSonar();
+    playSound(SOUND_GOT_GOODIE);
 }
 
 // Give IceMan some water.
 void StudentWorld::giveIceManWater() {
     myIceman->addWater();
+    playSound(SOUND_GOT_GOODIE);
 }
+
+// Give iceMan some gold
+void StudentWorld::giveIceManGold() const{
+    myIceman->addGold();
+}
+
 
 // Is the Actor a facing toward the IceMan?
 bool StudentWorld::facingTowardIceMan(Actor* a) const {
@@ -467,12 +652,24 @@ std::string StudentWorld::getDisplayText() const {
     int lives = static_cast<int>(getLives());
     int health = static_cast<int>(myIceman->getHealth()) * 10;
     int water = static_cast<int>(myIceman->getWater());
+    int oil = numOil;
+    int gold = static_cast<int>(myIceman->getGold());
+    int sonar = static_cast<int>(myIceman->getSonar());
     int score = static_cast<int>(getScore());
 
+    string ret = "Lvl: " + std::string(2 - std::to_string(level).length(), ' ') + std::to_string(level)
+        + " Lives: " + std::to_string(lives)
+        + " Health : " + std::string(3 - std::to_string(health).length(), ' ') + std::to_string(health) + "%"
+        + " Wtr : " + std::string(2 - std::to_string(water).length(), ' ') + std::to_string(water)
+        + " Gld : " + std::string(2 - std::to_string(gold).length(), ' ') + std::to_string(gold)
+        + " Oil Left : " + std::string(2 - std::to_string(oil).length(), ' ') + std::to_string(oil)
+        + " Sonar : " + std::string(2 - std::to_string(sonar).length(), ' ') + std::to_string(sonar)
+        + " Scr : " + std::string(6 - std::to_string(score).length(), '0') + std::to_string(score);
 
-    string ret = "Lvl: " + std::to_string(level)
+    /*string ret = "Lvl: " + std::to_string(level)
         + " Lives: " + to_string(lives) + " Health : " + to_string(health) + "% Wtr : " + to_string(water)
-        + "Gld : 5 Oil Left : 2 Sonar : 1 Scr : " + to_string(score);
+        + " Gld : " + to_string(gold) + " Oil Left : " + to_string(oil) + " Sonar : " + to_string(sonar) + 
+        " Scr : " + to_string(score);*/
 
     return ret;
 }

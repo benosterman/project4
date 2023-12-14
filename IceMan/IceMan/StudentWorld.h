@@ -21,11 +21,13 @@ private:
     static const int maxIceHeight = 60;
     Ice* oilField[64][64];
     queue<Actor*> inactive;
+    int actorPositions[64][64] = { 0 };
 
     unsigned int numTicks;
     int ticksBeforeProtester;
     int numTargetProtesters;
     int numProtesters;
+    int numOil;
 
 public:
     StudentWorld(std::string assetDir);
@@ -94,7 +96,14 @@ public:
     GraphObject::Direction backtraceShortestPath(int start_x, int start_y, int visited[64][64]);
 
     bool isThereIceInSquare(int x, int y);
+    
+    void giveIceManGold() const;
 
+    void pickUpOil();
+
+    bool canGenerateActor(int x, int y);
+
+    void resetActorField(int x, int y);
 };
 
 #endif // STUDENTWORLD_H_
